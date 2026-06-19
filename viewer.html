@@ -281,19 +281,23 @@ function render(){
     $('rulerSpan').textContent = `#${b.legacy_from} – #${b.legacy_to}`;
   }
 
-  // contents strip (prototype) — show the issues inside this book in place of the ruler
-  const cWrap=$('contents-wrap'), rWrap=document.querySelector('.ruler-wrap');
+  // contents strip (deep-dive scene) — show the issue covers BELOW the legacy timeline
+  const cWrap=$('contents-wrap');
   if(contentsMode && b.legacy_from!=null && b.legacy_to!=null){
-    rWrap.style.display='none'; cWrap.style.display='';
+    cWrap.style.display='';
     const sid=(currentEntry&&currentEntry.id)||'';
     const n=b.legacy_to-b.legacy_from+1;
     $('contentsSpan').textContent=`#${b.legacy_from} – #${b.legacy_to} · ${n} issues`;
     const strip=$('contentsStrip'); strip.innerHTML='';
     // size covers to fill the width in as few rows as possible (bigger = better on stream)
-    const usable=1084, gap=10;
-    const rows = n<=11 ? 1 : n<=24 ? 2 : 3;
+    // size covers to fill the width AND fit a fixed height budget, so cover + timeline
+    // + wall always stay inside the 1920x1080 OBS frame whatever the issue count
+    const usable=1084, gap=10, wallBudget=330;
+    const rows = n<=12 ? 1 : n<=24 ? 2 : 3;
     const perRow = Math.ceil(n/rows);
-    const w = Math.max(70, Math.min(150, Math.floor((usable-(perRow-1)*gap)/perRow)));
+    const fillW = Math.floor((usable-(perRow-1)*gap)/perRow);
+    const maxW = Math.floor((wallBudget-(rows-1)*gap)/rows/1.5);
+    const w = Math.max(58, Math.min(fillW, maxW));
     const h = Math.round(w*1.5);
     for(let i=b.legacy_from;i<=b.legacy_to;i++){
       const cell=document.createElement('div'); cell.className='issue';
@@ -305,7 +309,7 @@ function render(){
       cell.append(img,num); strip.appendChild(cell);
     }
   }else{
-    cWrap.style.display='none'; rWrap.style.display='';
+    cWrap.style.display='none';
   }
 
   // pod — hide section entirely when empty

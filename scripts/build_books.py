@@ -113,6 +113,7 @@ def upsert_manifest(args):
         "id": args.series_id,
         "label": args.series_label or args.series_group,
         "file": os.path.basename(args.out),
+        "csv": os.path.basename(args.csv),       # which CLZ export feeds this series (for re-import)
         "series_group": args.series_group,
         "box": args.box,
         "run_max": args.run_max,

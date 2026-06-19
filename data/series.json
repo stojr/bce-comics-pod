@@ -3,6 +3,7 @@
     "id": "asm",
     "label": "Amazing Spider-Man",
     "file": "books.json",
+    "csv": "export_comics.csv",
     "series_group": "Spider-Man: Amazing",
     "box": "Bookshelf",
     "run_max": 1000,

@@ -125,21 +125,42 @@ and Claude Code can edit it too.
 When you buy more books and want to refresh:
 
 1. In CLZ Comics, export to CSV again.
-2. Drop the new file in the folder as `export_comics.csv` (replace the old).
-3. In the terminal:
-   ```
-   python scripts\build_books.py --csv export_comics.csv ^
-       --series-group "Spider-Man: Amazing" --box "Bookshelf" ^
-       --series-label "Amazing Spider-Man" --out data\books.json
-   ```
-   (`^` continues a line in Windows cmd. Or just ask Claude Code to run it.)
+2. **Drop the new file in the `bce-legacy` folder as `export_comics.csv`**
+   (replace the old one — same filename).
+3. In the editor, click **↻ Re-import**. That's it — it re-runs the importer
+   with the right settings (stored per series) and tells you how many books
+   came in. No command to type.
 
-**Your edits survive this.** The rebuild matches books by ISBN and keeps any
-legacy ranges / pod notes / verified flags you already set. New books come in
-blank; existing books keep their enrichment.
+**Your edits survive this.** The rebuild matches books by their stable id (or
+ISBN) and keeps legacy ranges, pod notes, research, manual order, and verified
+flags. New books come in blank at the end; existing books keep everything.
 
-Easiest path: just tell Claude Code *"refresh books.json from the new
-export_comics.csv"* and it runs the right command.
+Prefer the command line? It still works:
+```
+python scripts\build_books.py --csv export_comics.csv ^
+    --series-group "Spider-Man: Amazing" --box "Bookshelf" ^
+    --series-label "Amazing Spider-Man" --run-max 1000 ^
+    --series-id asm --out data\books.json
+```
+(`^` continues a line in Windows cmd. Or just ask Claude Code to run it.)
+
+## Switching characters, colors, and adding/removing books
+
+- **Series picker** — top of the editor's left rail (and a hover menu in the
+  top-left of the viewer). Pick which character you're showing.
+- **Colors** — the editor's **⚙ Colors** button: set the screen background and
+  accent color (color wheel, hex, or eyedropper). Saved per series so the OBS
+  viewer picks it up on its next refresh. Leave the background **Transparent**
+  to keep OBS keyable.
+- **Add / remove / reorder** — **+ Add** makes a blank book; the selected book
+  has **↑ Move up / ↓ Move down / Delete**. Order is saved and survives a
+  re-import. (Changes apply when you click **Save changes**.)
+- **Web research** — on a selected book, **🔎 Research this volume** looks up
+  info about the collection/issues and lets you save it onto the book.
+
+Adding a second character: export that character's shelf from CLZ to its own
+CSV, then build it once with a new `--series-id` (e.g. `--series-id xmen
+--out data\xmen.json`). It joins the series picker automatically.
 
 ---
 

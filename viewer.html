@@ -85,9 +85,16 @@ body{display:flex;align-items:center;justify-content:center;}
 .issue-range.unset{font-size:20px;color:var(--ink-faint);font-style:italic;font-family:inherit;font-weight:400;margin:8px 0 16px;}
 .kbd-hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--ink-faint);letter-spacing:.1em;display:flex;align-items:center;gap:10px;}
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
+/* Series picker: hidden until the mouse is over the window, so a static OBS capture
+   never shows it, but you can switch characters while previewing in a browser. */
+.series-picker{position:fixed;top:12px;left:12px;z-index:20;opacity:0;transition:opacity .2s;
+  background:#11141a;color:var(--ink-soft);border:1px solid var(--line);border-radius:8px;
+  padding:6px 10px;font-family:inherit;font-size:13px;cursor:pointer;}
+body:hover .series-picker{opacity:.92;}
 </style>
 </head>
 <body>
+<select id="seriesSel" class="series-picker" aria-label="Series"></select>
 <div class="stage">
   <div class="card" id="card">
     <div class="head">
@@ -182,11 +189,15 @@ function render(){
   if(b.also_in) facts += `<div class="fact"><div class="k">Also in</div><div class="v" style="color:var(--avail)">${b.also_in}</div></div>`;
   $('facts').innerHTML = facts;
 
-  // cover
+  // cover — DOM-based with a null-safe onerror (closure over the well, not this.parentNode)
+  const cw = $('cover'); cw.innerHTML='';
   if(b.cover){
-    $('cover').innerHTML = `<img src="${b.cover}" alt="" onerror="this.parentNode.innerHTML='<span class=ph>cover not<br>downloaded yet</span>'">`;
+    const img=document.createElement('img'); img.alt='';
+    img.onerror=()=>{ cw.innerHTML='<span class="ph">cover not<br>downloaded yet</span>'; };
+    img.src=b.cover;                         // set via property — no attribute injection
+    cw.appendChild(img);
   }else{
-    $('cover').innerHTML = `<span class="ph">no ISBN<br>cover</span>`;
+    cw.innerHTML='<span class="ph">no ISBN<br>cover</span>';
   }
 
   // ruler
@@ -245,7 +256,31 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-function boot(){
+// Apply a per-series theme. The "screen background" is the page background behind the
+// card — transparent by default (so OBS stays keyable), a solid color when chosen.
+function applyTheme(t){
+  t = t || {};
+  const root = document.documentElement.style;
+  document.body.style.background = (t.bg && t.bg!=='transparent') ? t.bg : 'transparent';
+  if(t.accent)     root.setProperty('--hero', t.accent);
+  if(t.accentDeep) root.setProperty('--hero-deep', t.accentDeep);
+  if(t.ink)        root.setProperty('--ink', t.ink);
+}
+
+function populatePicker(manifest, currentId){
+  const sel=$('seriesSel');
+  if(!sel) return;
+  if(!manifest || manifest.length < 2){ sel.style.display='none'; return; }  // nothing to switch to
+  sel.innerHTML = manifest.map(e =>
+    `<option value="${e.id}"${e.id===currentId?' selected':''}>${e.label}</option>`).join('');
+  sel.onchange = () => {
+    const p = new URLSearchParams(location.search);
+    p.set('series', sel.value); p.delete('i');   // new series — drop the pinned index
+    location.search = p.toString();
+  };
+}
+
+async function boot(){
   fitStage();
   // fetch() is blocked over file:// — the page MUST be served over http.
   if(location.protocol==='file:'){
@@ -254,19 +289,24 @@ function boot(){
     $('subtitle').textContent="Double-clicking the file can't load data — run start.bat (or python serve.py), then open localhost:8000";
     return;
   }
-  fetch('data/books.json')
-    .then(r=>r.json())
-    .then(d=>{
-      DATA=d; books=d.books||[];
-      const pi=paramIndex();
-      if(pi!=null && books.length) idx=Math.max(0,Math.min(books.length-1,pi));  // clamp ?i=N
-      render();
-    })
-    .catch(err=>{
-      $('cover').innerHTML='<span class="ph">books.json<br>not found</span>';
-      $('title').textContent='Could not load data/books.json';
-      $('subtitle').textContent='Run start.bat or python serve.py, then open localhost:8000';
-    });
+  try{
+    let manifest=[];
+    try{ manifest = await (await fetch('data/series.json')).json(); }catch(e){ manifest=[]; }
+    const wantId = new URLSearchParams(location.search).get('series');
+    const entry = manifest.find(e=>e.id===wantId) || manifest[0] || null;
+    const file = entry ? 'data/'+entry.file : 'data/books.json';   // fallback: legacy single file
+    const d = await (await fetch(file)).json();
+    DATA=d; books=d.books||[];
+    applyTheme(entry && entry.theme);
+    populatePicker(manifest, entry ? entry.id : null);
+    const pi=paramIndex();
+    if(pi!=null && books.length) idx=Math.max(0,Math.min(books.length-1,pi));  // clamp ?i=N
+    render();
+  }catch(err){
+    $('cover').innerHTML='<span class="ph">books.json<br>not found</span>';
+    $('title').textContent='Could not load series data';
+    $('subtitle').textContent='Run start.bat or python serve.py, then open localhost:8000';
+  }
 }
 boot();
 </script>

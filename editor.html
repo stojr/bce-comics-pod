@@ -6,7 +6,7 @@
 <style>
 :root{
   --bg:#0f1216; --panel:#171b21; --panel2:#1f242c; --line:rgba(244,241,232,.14);
-  --ink:#f4f1e8; --soft:#a9b0bd; --faint:#6b7280;
+  --ink:#f4f1e8; --soft:#a9b0bd; --faint:#8b95a3;
   --hero:#e23636; --owned:#3ec7a8; --avail:#e8a13c;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -18,7 +18,13 @@ body{background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,Aria
 .list .top{padding:16px 18px;border-bottom:1px solid var(--line);}
 .list h1{font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:600;}
 .list .sub{font-size:12px;color:var(--faint);margin-top:4px;}
-.search{margin-top:12px;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;
+select.series{margin-top:10px;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;
+  color:var(--ink);padding:8px 10px;font-size:14px;font-family:inherit;}
+.toolbar{display:flex;gap:8px;margin-top:10px;}
+.toolbar button{flex:1;background:var(--panel2);color:var(--soft);border:1px solid var(--line);
+  border-radius:8px;padding:8px 6px;font-size:13px;cursor:pointer;}
+.toolbar button:hover{filter:brightness(1.12);color:var(--ink);}
+.search{margin-top:10px;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;
   color:var(--ink);padding:9px 12px;font-size:14px;}
 .rows{overflow-y:auto;flex:1;}
 .row{padding:11px 18px;border-bottom:1px solid rgba(244,241,232,.06);cursor:pointer;display:flex;gap:10px;align-items:center;}
@@ -49,23 +55,47 @@ textarea{resize:vertical;min-height:64px;line-height:1.5;}
 .cover-prev{width:120px;height:180px;border-radius:8px;background:var(--bg);border:1px solid var(--line);
   display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--faint);font-size:12px;text-align:center;}
 .cover-prev img{width:100%;height:100%;object-fit:cover;}
-.actions{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:24px 0 8px;margin-top:28px;display:flex;gap:12px;align-items:center;}
+.actions{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:24px 0 8px;margin-top:28px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
 button{background:var(--hero);color:#fff;border:none;border-radius:8px;padding:11px 22px;font-size:15px;font-weight:600;cursor:pointer;}
-button.ghost{background:transparent;border:1px solid var(--line);color:var(--soft);}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--soft);font-weight:500;padding:9px 16px;font-size:14px;}
 button:hover{filter:brightness(1.08);}
 .saved{font-size:14px;color:var(--owned);opacity:0;transition:opacity .2s;}
 .saved.show{opacity:1;}
+.dirty{font-size:13px;color:var(--avail);margin-left:auto;}
 .gaps-list{display:flex;flex-direction:column;gap:6px;}
 .gap-item{display:flex;gap:8px;align-items:center;font-size:14px;}
 .gap-item button{background:transparent;border:1px solid var(--line);color:var(--soft);padding:4px 10px;font-size:13px;}
 .hint{font-size:12px;color:var(--faint);}
+/* research */
+.research-box{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px;color:var(--soft);line-height:1.5;white-space:pre-wrap;min-height:40px;}
+.research-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.research-item{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--ink);line-height:1.5;}
+.research-item .src{font-size:11px;color:var(--faint);margin-top:6px;display:flex;justify-content:space-between;align-items:center;}
+.research-item .src button{background:transparent;border:1px solid var(--line);color:var(--soft);padding:3px 9px;font-size:12px;}
+/* settings modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50;}
+.overlay.show{display:flex;}
+.modal{width:460px;max-width:92vw;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 28px;}
+.modal h3{font-size:18px;margin-bottom:6px;}
+.modal .msub{font-size:13px;color:var(--faint);margin-bottom:20px;}
+.color-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.color-row label{flex:0 0 130px;}
+.color-row input[type=color]{width:46px;height:38px;padding:2px;background:var(--bg);border:1px solid var(--line);border-radius:8px;cursor:pointer;}
+.color-row input.hex{width:110px;}
+.modal .mactions{display:flex;gap:12px;justify-content:flex-end;margin-top:24px;}
 </style>
 </head>
 <body>
 <div class="list">
   <div class="top">
     <h1>Legacy Editor</h1>
+    <select class="series" id="seriesSel" aria-label="Series"></select>
     <div class="sub" id="sub">loading…</div>
+    <div class="toolbar">
+      <button onclick="addBook()">+ Add</button>
+      <button onclick="openSettings()">⚙ Colors</button>
+      <button onclick="reimport()" id="reimportBtn">↻ Re-import</button>
+    </div>
     <input class="search" id="search" placeholder="Filter books…">
   </div>
   <div class="rows" id="rows"></div>
@@ -114,6 +144,19 @@ button:hover{filter:brightness(1.08);}
     </div>
 
     <div class="field full">
+      <label>Web research <span class="hint">(looks up the volume/issues; saved notes appear below)</span></label>
+      <div class="row2" style="margin-bottom:8px">
+        <button class="ghost" type="button" onclick="research()">🔎 Research this volume</button>
+        <span class="hint" id="researchStatus"></span>
+      </div>
+      <div class="research-box" id="researchOut">No lookup yet.</div>
+      <div class="row2" style="margin-top:8px">
+        <button class="ghost" type="button" id="researchAdd" style="display:none" onclick="addResearch()">+ save to book</button>
+      </div>
+      <div class="research-list" id="researchList"></div>
+    </div>
+
+    <div class="field full">
       <label>Also available in (alt-format note)</label>
       <input id="fAlso" placeholder="Omnibus Vol. 1">
     </div>
@@ -126,14 +169,47 @@ button:hover{filter:brightness(1.08);}
 
   <div class="actions" id="actions" style="display:none">
     <button onclick="saveAll()">Save changes</button>
-    <button class="ghost" onclick="revert()">Revert this book</button>
+    <button class="ghost" onclick="moveBook(-1)">↑ Move up</button>
+    <button class="ghost" onclick="moveBook(1)">↓ Move down</button>
+    <button class="ghost" onclick="deleteBook()">Delete book</button>
+    <button class="ghost" onclick="revert()">Revert</button>
     <span class="saved" id="saved">✓ saved (backup made)</span>
+    <span class="dirty" id="dirtyFlag" style="display:none">● unsaved changes</span>
+  </div>
+</div>
+
+<!-- settings / colors modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Colors for <span id="themeSeries">this series</span></h3>
+    <div class="msub">Saved to the series so the OBS viewer reflects it on refresh.</div>
+    <div class="color-row">
+      <label>Screen background</label>
+      <input type="color" id="bgColor" value="#0c0e13">
+      <input class="hex mono" id="bgHex" placeholder="#0c0e13">
+      <button class="ghost" id="bgEye" type="button">⊙ pick</button>
+    </div>
+    <label class="chk" style="margin:-6px 0 16px"><input type="checkbox" id="bgTransparent"> Transparent (keyable in OBS)</label>
+    <div class="color-row">
+      <label>Accent (hero)</label>
+      <input type="color" id="accentColor" value="#e23636">
+      <input class="hex mono" id="accentHex" placeholder="#e23636">
+      <button class="ghost" id="accentEye" type="button">⊙ pick</button>
+    </div>
+    <div class="mactions">
+      <button class="ghost" onclick="closeSettings()">Cancel</button>
+      <button onclick="saveTheme()">Save colors</button>
+    </div>
   </div>
 </div>
 
 <script>
-let DATA=null, cur=-1, dirtySnapshot=null;
-const $=id=>document.getElementById(id);
+const state = { manifest: [], series: null, DATA: null, cur: -1, dirty: false };
+let DATA = null, cur = -1, dirtySnapshot = null, lastResearch = null;
+const $ = id => document.getElementById(id);
+
+function markDirty(){ state.dirty = true; $('dirtyFlag').style.display=''; }
+function clearDirty(){ state.dirty = false; $('dirtyFlag').style.display='none'; }
 
 function dot(b){
   if(b.legacy_from==null) return 'none';
@@ -143,21 +219,30 @@ function dot(b){
 function renderList(filter=''){
   const rows=$('rows'); rows.innerHTML='';
   DATA.books.forEach((b,i)=>{
-    if(filter && !(b.title.toLowerCase().includes(filter)||(b.format||'').toLowerCase().includes(filter))) return;
+    if(filter && !((b.title||'').toLowerCase().includes(filter)||(b.format||'').toLowerCase().includes(filter))) return;
     const el=document.createElement('div');
     el.className='row'+(i===cur?' active':'');
-    el.innerHTML=`<span class="n">${i+1}</span><span class="dot ${dot(b)}"></span><span class="t">${b.title}</span>`;
-    el.onclick=()=>select(i);
+    const n=document.createElement('span'); n.className='n'; n.textContent=i+1;
+    const d=document.createElement('span'); d.className='dot '+dot(b);
+    const t=document.createElement('span'); t.className='t'; t.textContent=b.title||'(untitled)';  // textContent: no HTML injection
+    el.append(n,d,t);
+    el.onclick=()=>userSelect(i);
     rows.appendChild(el);
   });
 }
 
+// user clicked a row — flush the current form first so edits aren't lost (EDIT-1 fix)
+function userSelect(i){
+  if(cur>=0 && $('form').style.display!=='none') collect();
+  select(i);
+}
+
 function select(i){
-  cur=i; const b=DATA.books[i];
+  cur=i; state.cur=i; const b=DATA.books[i];
   dirtySnapshot=JSON.parse(JSON.stringify(b));
   $('form').style.display='grid'; $('actions').style.display='flex';
-  $('eTitle').textContent=b.title;
-  $('eMeta').textContent=[b.isbn,b.year,b.pages?b.pages+'p':''].filter(Boolean).join('  ·  ');
+  $('eTitle').textContent=b.title||'(untitled)';
+  $('eMeta').textContent=[b.id,b.isbn,b.year,b.pages?b.pages+'p':''].filter(Boolean).join('  ·  ');
   $('fTitle').value=b.title||'';
   $('fFormat').value=b.format||'';
   $('fFrom').value=b.legacy_from??'';
@@ -168,10 +253,15 @@ function select(i){
   $('fAlso').value=b.also_in||'';
   $('fCover').value=b.cover||'';
   renderGaps(b);
-  // cover preview
-  const cp=$('coverPrev');
-  if(b.cover){ cp.innerHTML=`<img src="${b.cover}" onerror="this.parentNode.textContent='no cover\\nfile yet'">`; }
-  else cp.textContent='no cover';
+  renderResearch(b);
+  $('researchOut').textContent='No lookup yet.'; $('researchAdd').style.display='none'; $('researchStatus').textContent='';
+  // cover preview via DOM property (no innerHTML interpolation — SEC-6)
+  const cp=$('coverPrev'); cp.innerHTML='';
+  if(b.cover){
+    const img=document.createElement('img');
+    img.onerror=()=>{ cp.textContent='no cover file yet'; };
+    img.src=b.cover; cp.appendChild(img);
+  } else cp.textContent='no cover';
   renderList($('search').value.toLowerCase());
 }
 
@@ -179,61 +269,218 @@ function renderGaps(b){
   const gl=$('gapsList'); gl.innerHTML='';
   (b.gaps_avail||[]).forEach((g,gi)=>{
     const el=document.createElement('div'); el.className='gap-item';
-    el.innerHTML=`<span class="mono">#${g[0]} → #${g[1]}</span>
-      <button type="button" onclick="removeGap(${gi})">remove</button>`;
-    gl.appendChild(el);
+    const span=document.createElement('span'); span.className='mono'; span.textContent=`#${g[0]} → #${g[1]}`;
+    const btn=document.createElement('button'); btn.type='button'; btn.textContent='remove'; btn.onclick=()=>removeGap(gi);
+    el.append(span,btn); gl.appendChild(el);
   });
   if(!(b.gaps_avail||[]).length) gl.innerHTML='<span class="hint">none</span>';
 }
 
+function renderResearch(b){
+  const rl=$('researchList'); rl.innerHTML='';
+  (b.research||[]).forEach((r,ri)=>{
+    const el=document.createElement('div'); el.className='research-item';
+    const txt=document.createElement('div'); txt.textContent=r.text||'';   // textContent: web text is untrusted (SEC-3)
+    const src=document.createElement('div'); src.className='src';
+    const lbl=document.createElement('span'); lbl.textContent=[r.source,r.fetched_at].filter(Boolean).join(' · ');
+    const rm=document.createElement('button'); rm.type='button'; rm.textContent='remove'; rm.onclick=()=>{ b.research.splice(ri,1); renderResearch(b); markDirty(); };
+    src.append(lbl,rm); el.append(txt,src); rl.appendChild(el);
+  });
+}
+
 function collect(){
+  if(cur<0) return;
   const b=DATA.books[cur];
   b.title=$('fTitle').value.trim();
   b.format=$('fFormat').value.trim();
-  b.legacy_from=$('fFrom').value===''?null:parseInt($('fFrom').value,10);
-  b.legacy_to=$('fTo').value===''?null:parseInt($('fTo').value,10);
+  const f=$('fFrom').value, t=$('fTo').value;
+  b.legacy_from = f===''?null:parseInt(f,10);
+  b.legacy_to   = t===''?null:parseInt(t,10);
+  // validation: if one of from/to is set, require both; enforce from<=to (EDIT-2)
+  if(b.legacy_from!=null && b.legacy_to!=null && b.legacy_from>b.legacy_to){
+    [b.legacy_from,b.legacy_to]=[b.legacy_to,b.legacy_from];
+  }
   b.verified=$('fVerified').checked;
   b.read=$('fRead').checked;
   b.pod=$('fPod').value.trim();
   b.also_in=$('fAlso').value.trim();
   b.cover=$('fCover').value.trim();
+  markDirty();
 }
 
 function addGap(){
   const f=parseInt($('gapFrom').value,10), t=parseInt($('gapTo').value,10);
   if(Number.isFinite(f)&&Number.isFinite(t)){
-    const b=DATA.books[cur]; (b.gaps_avail=b.gaps_avail||[]).push([f,t]);
-    $('gapFrom').value=''; $('gapTo').value=''; renderGaps(b);
+    const lo=Math.min(f,t), hi=Math.max(f,t);
+    const b=DATA.books[cur]; (b.gaps_avail=b.gaps_avail||[]).push([lo,hi]);
+    $('gapFrom').value=''; $('gapTo').value=''; renderGaps(b); markDirty();
   }
 }
-function removeGap(gi){ const b=DATA.books[cur]; b.gaps_avail.splice(gi,1); renderGaps(b); }
+function removeGap(gi){ const b=DATA.books[cur]; b.gaps_avail.splice(gi,1); renderGaps(b); markDirty(); }
+
+// ---- add / remove / reorder ----
+function addBook(){
+  if(cur>=0 && $('form').style.display!=='none') collect();
+  const arr=DATA.books;
+  const maxOrder=arr.reduce((m,b)=>Math.max(m,b.order||0),0);
+  arr.push({ id:'book-'+Date.now().toString(36), order:maxOrder+10, title:'(new book)', format:'',
+    format_raw:'', on_spine:true, year:null, era_tag:'', isbn:'', pages:null, read:false, status:'owned',
+    cover:'', legacy_from:null, legacy_to:null, gaps_avail:[], also_in:'', pod:'', research:[], verified:false });
+  cur=arr.length-1; markDirty(); select(cur);
+}
+function deleteBook(){
+  if(cur<0) return;
+  const b=DATA.books[cur];
+  if(!confirm('Delete "'+(b.title||'this book')+'"?\\n(A timestamped backup is made when you Save.)')) return;
+  DATA.books.splice(cur,1);
+  renumber();
+  markDirty();
+  if(DATA.books.length){ cur=Math.min(cur,DATA.books.length-1); select(cur); }
+  else { cur=-1; $('form').style.display='none'; $('actions').style.display='none'; $('eTitle').textContent='No books'; renderList(); }
+}
+function moveBook(dir){
+  if(cur<0) return;
+  const j=cur+dir;
+  if(j<0||j>=DATA.books.length) return;
+  collect();
+  const arr=DATA.books; [arr[cur],arr[j]]=[arr[j],arr[cur]];
+  renumber(); cur=j; markDirty(); select(cur);
+}
+function renumber(){ DATA.books.forEach((b,i)=>b.order=(i+1)*10); }  // gapped order by position
 
 function revert(){
   DATA.books[cur]=JSON.parse(JSON.stringify(dirtySnapshot));
   select(cur);
 }
 
-async function saveAll(){
-  collect();
+// ---- web research ----
+async function research(){
+  if(cur<0) return;
+  const b=DATA.books[cur];
+  const label=(state.series&&state.series.label)||DATA.series||'';
+  let url='/api/research?series='+encodeURIComponent(label)+'&title='+encodeURIComponent(b.title||'');
+  if(b.legacy_from!=null) url+='&from='+b.legacy_from+'&to='+(b.legacy_to??'');
+  $('researchOut').textContent='searching…'; $('researchStatus').textContent=''; $('researchAdd').style.display='none';
   try{
-    const r=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(DATA)});
+    const j=await (await fetch(url)).json();
+    if(j.error){ $('researchOut').textContent='error: '+j.error; return; }
+    lastResearch={ text:j.summary, source:j.source };
+    $('researchOut').textContent = j.summary || '(no info found)';
+    $('researchStatus').textContent = j.source ? ('via '+j.source+(j.range?(' · '+j.range):'')) : '';
+    $('researchAdd').style.display = j.summary ? '' : 'none';
+  }catch(e){ $('researchOut').textContent='lookup failed — is serve.py running?'; }
+}
+function addResearch(){
+  if(cur<0||!lastResearch||!lastResearch.text) return;
+  const b=DATA.books[cur];
+  (b.research=b.research||[]).push({ text:lastResearch.text, source:lastResearch.source||'', fetched_at:new Date().toISOString().slice(0,10) });
+  renderResearch(b); $('researchAdd').style.display='none'; markDirty();
+}
+
+// ---- settings / theme ----
+function hexOk(s){ return /^#[0-9a-fA-F]{6}$/.test(s); }
+function syncColor(colorId, hexId){
+  $(colorId).addEventListener('input', ()=>{ $(hexId).value=$(colorId).value; });
+  $(hexId).addEventListener('input', ()=>{ if(hexOk($(hexId).value)) $(colorId).value=$(hexId).value; });
+}
+function wireEyedropper(btnId, colorId, hexId){
+  const btn=$(btnId);
+  if(!window.EyeDropper){ btn.style.display='none'; return; }
+  btn.onclick=async()=>{ try{ const r=await new EyeDropper().open(); $(colorId).value=r.sRGBHex; $(hexId).value=r.sRGBHex; }catch(e){} };
+}
+function openSettings(){
+  const t=(state.series&&state.series.theme)||{};
+  $('themeSeries').textContent=(state.series&&state.series.label)||'this series';
+  const transparent = !t.bg || t.bg==='transparent';
+  $('bgTransparent').checked=transparent;
+  $('bgColor').value = (t.bg && t.bg!=='transparent') ? t.bg : '#0c0e13';
+  $('bgHex').value = $('bgColor').value;
+  $('accentColor').value = t.accent || '#e23636';
+  $('accentHex').value = $('accentColor').value;
+  $('overlay').classList.add('show');
+}
+function closeSettings(){ $('overlay').classList.remove('show'); }
+async function saveTheme(){
+  if(!state.series){ alert('No series selected.'); return; }
+  const theme = { bg: $('bgTransparent').checked ? 'transparent' : $('bgColor').value,
+                  accent: $('accentColor').value };
+  try{
+    const r=await fetch('/api/theme?series='+encodeURIComponent(state.series.id),
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(theme)});
     if(!r.ok) throw new Error(await r.text());
-    const s=$('saved'); s.classList.add('show'); setTimeout(()=>s.classList.remove('show'),1800);
-    dirtySnapshot=JSON.parse(JSON.stringify(DATA.books[cur]));
+    state.series.theme=theme; closeSettings(); toast();
+    document.documentElement.style.setProperty('--hero', theme.accent);  // live preview of accent
+  }catch(e){ alert('Could not save colors: '+e.message); }
+}
+
+// ---- save / re-import ----
+function toast(){ const s=$('saved'); s.classList.add('show'); setTimeout(()=>s.classList.remove('show'),1800); }
+
+async function saveAll(){
+  if(cur>=0) collect();
+  const q = state.series ? ('?series='+encodeURIComponent(state.series.id)) : '';
+  try{
+    const r=await fetch('/save'+q,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(DATA)});
+    if(!r.ok) throw new Error(await r.text());
+    clearDirty(); toast();
+    dirtySnapshot=cur>=0?JSON.parse(JSON.stringify(DATA.books[cur])):null;
     renderList($('search').value.toLowerCase());
-  }catch(e){
-    alert('Save failed — is serve.py running?\\n\\n'+e.message);
-  }
+  }catch(e){ alert('Save failed — is serve.py running?\\n\\n'+e.message); }
+}
+
+async function reimport(){
+  if(!state.series){ alert('No series selected.'); return; }
+  if(state.dirty && !confirm('You have unsaved changes that a re-import may overwrite. Continue?')) return;
+  if(!confirm('Re-import '+state.series.label+' from its CLZ export?\\nYour enrichment, order and notes are preserved.')) return;
+  $('reimportBtn').textContent='…working';
+  try{
+    const r=await fetch('/api/rebuild?series='+encodeURIComponent(state.series.id),{method:'POST'});
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.output||j.error||'rebuild failed');
+    alert('Re-import done:\\n\\n'+j.output);
+    await loadSeries(state.series.id);   // reload the refreshed data
+  }catch(e){ alert('Re-import failed:\\n\\n'+e.message); }
+  finally{ $('reimportBtn').textContent='↻ Re-import'; }
+}
+
+// ---- boot / series ----
+async function loadSeries(id){
+  const entry = state.manifest.find(e=>e.id===id) || state.manifest[0] || null;
+  state.series = entry;
+  const file = entry ? 'data/'+entry.file : 'data/books.json';
+  DATA = await (await fetch(file)).json();
+  state.DATA = DATA; cur=-1; clearDirty();
+  $('sub').textContent = `${(entry&&entry.label)||DATA.series} · ${DATA.books.length} books`;
+  $('form').style.display='none'; $('actions').style.display='none'; $('eTitle').textContent='Select a book';
+  renderList();
+}
+
+function populateSeriesSelect(){
+  const sel=$('seriesSel');
+  if(!state.manifest.length){ sel.style.display='none'; return; }
+  sel.innerHTML='';
+  state.manifest.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=e.label; sel.appendChild(o); });
+  sel.value=state.series? state.series.id : state.manifest[0].id;
+  sel.onchange=async()=>{
+    if(state.dirty && !confirm('Switch series? Unsaved changes will be lost.')){ sel.value=state.series.id; return; }
+    await loadSeries(sel.value);
+  };
 }
 
 $('search').addEventListener('input',e=>renderList(e.target.value.toLowerCase()));
+syncColor('bgColor','bgHex'); syncColor('accentColor','accentHex');
+wireEyedropper('bgEye','bgColor','bgHex'); wireEyedropper('accentEye','accentColor','accentHex');
 
-fetch('data/books.json').then(r=>r.json()).then(d=>{
-  DATA=d;
-  $('sub').textContent=`${d.series} · ${d.books.length} books`;
-  renderList();
-}).catch(()=>{ $('sub').textContent='books.json not found — run serve.py'; });
+(async function boot(){
+  if(location.protocol==='file:'){ $('sub').textContent='Open via start.bat / serve.py (not the file directly)'; return; }
+  try{
+    try{ state.manifest = await (await fetch('data/series.json')).json(); }catch(e){ state.manifest=[]; }
+    const wantId = new URLSearchParams(location.search).get('series');
+    const startId = (state.manifest.find(e=>e.id===wantId)||state.manifest[0]||{}).id;
+    await loadSeries(startId);
+    populateSeriesSelect();
+  }catch(e){ $('sub').textContent='data not found — run serve.py'; }
+})();
 </script>
 </body>
 </html>

@@ -154,7 +154,7 @@ def main():
         "books": books,
     }
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    with open(args.out, "w", encoding="utf-8") as f:
+    with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         json.dump(out, f, indent=2, ensure_ascii=False)
 
     enriched = sum(1 for b in books if b["legacy_from"] is not None)

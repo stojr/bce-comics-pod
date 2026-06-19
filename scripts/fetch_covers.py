@@ -73,6 +73,9 @@ def download(url, path):
         return False
 
 def main():
+    # Windows consoles default to cp1252, which can't encode the ✓/✗ marks — force UTF-8.
+    try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception: pass
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--isbn", default=None)

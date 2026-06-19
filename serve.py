@@ -29,11 +29,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if self.path != "/save":
             self.send_error(404); return
         length = int(self.headers.get("Content-Length", 0))
+        if length > 20 * 1024 * 1024:          # cap: don't read an unbounded body into memory
+            self.send_error(413, "payload too large"); return
         raw = self.rfile.read(length)
         try:
             payload = json.loads(raw)
         except Exception as e:
             self.send_error(400, f"bad json: {e}"); return
+
+        # shape check — never let a malformed blob clobber the live file
+        if not isinstance(payload, dict) or not isinstance(payload.get("books"), list):
+            self.send_error(400, "payload must be an object with a 'books' array"); return
 
         path = os.path.join(ROOT, DATA)
         # timestamped backup before every write — never lose data
@@ -43,8 +49,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             shutil.copy(path, os.path.join(bk, f"books-{stamp}.json"))
 
-        with open(path, "w", encoding="utf-8") as f:
+        # atomic write: write a temp file in the same dir, then replace — a failed
+        # or interrupted write can never truncate the live books.json
+        tmp = path + ".tmp"
+        # newline="\n" keeps LF on Windows (text mode would translate to CRLF and
+        # churn every line on each save, polluting git diffs)
+        with open(tmp, "w", encoding="utf-8", newline="\n") as f:
             json.dump(payload, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, path)
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -58,7 +70,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     os.chdir(ROOT)
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    # loopback only — do not expose the project + unauthenticated /save writer to the LAN
+    with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
         print(f"\n  BCE Legacy tool running.")
         print(f"  Slide  :  http://localhost:{PORT}/viewer.html")
         print(f"  Editor :  http://localhost:{PORT}/editor.html")

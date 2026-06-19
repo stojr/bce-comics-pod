@@ -32,7 +32,7 @@ import argparse, json, sys
 DATA = "data/books.json"
 
 def load(): return json.load(open(DATA, encoding="utf-8"))
-def save(d): json.dump(d, open(DATA,"w",encoding="utf-8"), indent=2, ensure_ascii=False)
+def save(d): json.dump(d, open(DATA,"w",encoding="utf-8",newline="\n"), indent=2, ensure_ascii=False)
 
 def review(d):
     done=0
@@ -53,6 +53,9 @@ def review(d):
     print("unverified ranges by ISBN/title, then re-run with --verified.\n")
 
 def main():
+    # Windows consoles default to cp1252, which can't encode the ✓/≈ flags — force UTF-8.
+    try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception: pass
     ap=argparse.ArgumentParser()
     ap.add_argument("--isbn")
     ap.add_argument("--from", dest="f", type=int)

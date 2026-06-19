@@ -68,6 +68,10 @@ button:hover{filter:brightness(1.08);}
 .hint{font-size:12px;color:var(--faint);}
 /* research */
 .research-box{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px;color:var(--soft);line-height:1.5;white-space:pre-wrap;min-height:40px;}
+.research-sources{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:13px;align-items:center;}
+.research-sources .lbl{color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-size:11px;}
+.research-sources a{color:var(--avail);text-decoration:none;}
+.research-sources a:hover{text-decoration:underline;}
 .research-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
 .research-item{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--ink);line-height:1.5;}
 .research-item .src{font-size:11px;color:var(--faint);margin-top:6px;display:flex;justify-content:space-between;align-items:center;}
@@ -150,6 +154,7 @@ button:hover{filter:brightness(1.08);}
         <span class="hint" id="researchStatus"></span>
       </div>
       <div class="research-box" id="researchOut">No lookup yet.</div>
+      <div class="research-sources" id="researchSources"></div>
       <div class="row2" style="margin-top:8px">
         <button class="ghost" type="button" id="researchAdd" style="display:none" onclick="addResearch()">+ save to book</button>
       </div>
@@ -254,7 +259,7 @@ function select(i){
   $('fCover').value=b.cover||'';
   renderGaps(b);
   renderResearch(b);
-  $('researchOut').textContent='No lookup yet.'; $('researchAdd').style.display='none'; $('researchStatus').textContent='';
+  $('researchOut').textContent='No lookup yet.'; $('researchAdd').style.display='none'; $('researchStatus').textContent=''; $('researchSources').innerHTML='';
   // cover preview via DOM property (no innerHTML interpolation — SEC-6)
   const cp=$('coverPrev'); cp.innerHTML='';
   if(b.cover){
@@ -359,9 +364,10 @@ async function research(){
   const b=DATA.books[cur];
   const label=(state.series&&state.series.label)||DATA.series||'';
   let url='/api/research?series='+encodeURIComponent(label)+'&title='+encodeURIComponent(b.title||'')
-          +'&format='+encodeURIComponent(b.format||'');   // match the right edition, not a same-titled trade
+          +'&format='+encodeURIComponent(b.format||'')        // match the right edition, not a same-titled trade
+          +'&isbn='+encodeURIComponent(b.isbn||'');
   if(b.legacy_from!=null) url+='&from='+b.legacy_from+'&to='+(b.legacy_to??'');
-  $('researchOut').textContent='searching…'; $('researchStatus').textContent=''; $('researchAdd').style.display='none';
+  $('researchOut').textContent='searching…'; $('researchStatus').textContent=''; $('researchAdd').style.display='none'; $('researchSources').innerHTML='';
   try{
     const j=await (await fetch(url)).json();
     if(j.error){ $('researchOut').textContent='error: '+j.error; return; }
@@ -369,6 +375,12 @@ async function research(){
     $('researchOut').textContent = j.summary || '(no info found)';
     $('researchStatus').textContent = j.source ? ('via '+j.source+(j.range?(' · '+j.range):'')) : '';
     $('researchAdd').style.display = j.summary ? '' : 'none';
+    // authoritative verification links (PRH, Marvel Database/Omnibus wiki, Wikipedia, Marvel.com)
+    const rs=$('researchSources');
+    if(j.sources && j.sources.length){
+      const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent='verify edition:'; rs.appendChild(lbl);
+      j.sources.forEach(s=>{ const a=document.createElement('a'); a.href=s.url; a.target='_blank'; a.rel='noopener'; a.textContent=s.name; rs.appendChild(a); });
+    }
   }catch(e){ $('researchOut').textContent='lookup failed — is serve.py running?'; }
 }
 function addResearch(){

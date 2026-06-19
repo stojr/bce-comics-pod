@@ -116,8 +116,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self._send_json(502, {"error": f"lookup failed: {e}"}); return
         frm, to = self._query("from", ""), self._query("to", "")
+        # Authoritative verification links (the user/Claude clicks through to confirm the
+        # exact edition). We return URLs, not scraped content — robust and no SSRF.
+        title, isbn, fmt = self._query("title", ""), self._query("isbn", ""), self._query("format", "")
+        qte = urllib.parse.quote_plus((title + " " + fmt).strip())
+        sources = []
+        if isbn:
+            sources.append({"name": "Penguin Random House",
+                            "url": f"https://www.penguinrandomhouse.com/search/site?q={urllib.parse.quote_plus(isbn)}"})
+        sources += [
+            {"name": "Marvel Database (Epic/Omnibus wiki)",
+             "url": f"https://marvel.fandom.com/wiki/Special:Search?query={qte}"},
+            {"name": "Wikipedia",
+             "url": f"https://en.wikipedia.org/w/index.php?search={qte}"},
+            {"name": "Marvel.com",
+             "url": f"https://www.marvel.com/search?query={urllib.parse.quote_plus(title)}"},
+        ]
         self._send_json(200, {"summary": summary or "", "source": "Comic Vine",
-                              "query": coll, "range": (f"#{frm}-#{to}" if frm and to else "")})
+                              "query": coll, "range": (f"#{frm}-#{to}" if frm and to else ""),
+                              "sources": sources})
 
     # ---- POST: save / theme / rebuild ---------------------------------
     def do_POST(self):

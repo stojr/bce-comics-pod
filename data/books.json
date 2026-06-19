@@ -23,7 +23,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9780785195818",
@@ -40,12 +40,12 @@
       "status": "owned",
       "cover": "covers/9780785195818.jpg",
       "legacy_from": 18,
-      "legacy_to": 30,
+      "legacy_to": 38,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302910235",
@@ -67,7 +67,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302917807",
@@ -89,7 +89,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302921965",
@@ -111,7 +111,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302929084",
@@ -133,7 +133,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302904074",
@@ -155,7 +155,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302933500",
@@ -177,7 +177,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302948740",
@@ -194,12 +194,12 @@
       "status": "owned",
       "cover": "covers/9781302948740.jpg",
       "legacy_from": 143,
-      "legacy_to": 156,
+      "legacy_to": 164,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302955267",
@@ -215,13 +215,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302955267.jpg",
-      "legacy_from": 157,
-      "legacy_to": 174,
+      "legacy_from": 165,
+      "legacy_to": 185,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302960483",
@@ -237,13 +237,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302960483.jpg",
-      "legacy_from": 175,
-      "legacy_to": 192,
+      "legacy_from": 186,
+      "legacy_to": 206,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302960490",
@@ -303,13 +303,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9780785189169.jpg",
-      "legacy_from": 252,
-      "legacy_to": 263,
+      "legacy_from": 259,
+      "legacy_to": 272,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9780785188674",
@@ -375,7 +375,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302911423",
@@ -397,7 +397,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "024885200010",
@@ -435,13 +435,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9780785187899.jpg",
-      "legacy_from": 327,
+      "legacy_from": 326,
       "legacy_to": 333,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302918118",
@@ -463,7 +463,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "75960635616499117",
@@ -529,7 +529,7 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302950545",

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BCE Legacy Viewer</title>
+<style>
+/* ============================================================
+   BCE COMICS POD — LEGACY VIEWER  (OBS Browser Source)
+   Reads data/books.json. Two ways to drive it:
+     • ARROW KEYS  ← →   flip between books live (focus the source,
+       or use an off-screen browser window)
+     • URL PARAM   viewer.html?i=12   jump straight to book #12
+       (use one OBS browser source per scene, each with its own ?i=)
+   Press  R  to toggle a read/unread filter. Press  S  to jump to
+   the first un-verified book (handy while enriching ranges).
+   ============================================================ */
+:root{
+  --ink:#f4f1e8; --ink-soft:#a9b0bd; --ink-faint:#6b7280;
+  --line:rgba(244,241,232,.14);
+  --owned:#3ec7a8; --avail:#e8a13c; --none:#5a6270;
+  --hero:#e23636; --hero-deep:#a31f1f; --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;background:transparent;overflow:hidden;
+  font-family:"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+.stage{width:1920px;height:1080px;display:flex;align-items:center;justify-content:center;padding:64px 96px;}
+.card{width:1180px;background:linear-gradient(180deg,#161a21 0%,#11141a 100%);
+  border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden;position:relative;}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;
+  background:linear-gradient(180deg,var(--hero) 0%,var(--hero-deep) 100%);}
+.head{display:flex;align-items:center;justify-content:space-between;
+  padding:26px 40px 18px 48px;border-bottom:1px solid var(--line);}
+.series{font-size:15px;letter-spacing:.32em;font-weight:700;color:var(--ink-soft);text-transform:uppercase;}
+.series .legacy{color:var(--hero);}
+.counter{font-size:13px;letter-spacing:.14em;color:var(--ink-faint);font-family:"SF Mono",ui-monospace,monospace;}
+.pod-mark{font-size:13px;letter-spacing:.18em;color:var(--ink-faint);text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.pod-mark .dot{width:7px;height:7px;border-radius:50%;background:var(--hero);}
+.body{display:flex;gap:36px;padding:32px 48px 8px;}
+.cover-well{flex:0 0 230px;height:345px;border-radius:8px;background:#0c0e13;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.cover-well img{width:100%;height:100%;object-fit:cover;display:block;}
+.cover-well .ph{color:var(--ink-faint);font-size:14px;letter-spacing:.1em;text-transform:uppercase;text-align:center;padding:14px;}
+.meta{flex:1;min-width:0;display:flex;flex-direction:column;}
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.badge{font-size:14px;font-weight:700;letter-spacing:.04em;padding:6px 14px;border-radius:7px;text-transform:uppercase;}
+.badge.format{background:rgba(62,199,168,.12);color:var(--owned);border:1px solid rgba(62,199,168,.3);}
+.badge.read{background:rgba(62,199,168,.16);color:var(--owned);}
+.badge.unread{background:rgba(107,114,128,.18);color:var(--ink-soft);}
+.badge.unverified{background:rgba(232,161,60,.16);color:var(--avail);}
+.title{font-size:44px;font-weight:800;line-height:1.05;color:var(--ink);letter-spacing:-.01em;}
+.subtitle{font-size:21px;color:var(--ink-soft);margin-top:8px;font-weight:500;}
+.facts{display:flex;gap:44px;margin-top:24px;flex-wrap:wrap;}
+.fact .k{font-size:13px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:5px;}
+.fact .v{font-size:20px;color:var(--ink);font-weight:600;}
+.fact .v.mono{font-family:"SF Mono",ui-monospace,monospace;letter-spacing:-.02em;}
+.ruler-wrap{padding:22px 48px 6px;}
+.ruler-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
+.ruler-head .label{font-size:13px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase;}
+.ruler-head .span{font-size:15px;color:var(--hero);font-weight:700;font-family:"SF Mono",ui-monospace,monospace;}
+.ruler{position:relative;height:54px;}
+.track{position:absolute;left:0;right:0;top:20px;height:14px;border-radius:7px;background:#0c0e13;border:1px solid var(--line);overflow:hidden;}
+.seg{position:absolute;top:20px;height:14px;}
+.seg.owned{background:rgba(62,199,168,.42);}
+.seg.avail{background:rgba(232,161,60,.40);}
+.seg.hero{top:16px;height:22px;border-radius:5px;background:var(--hero);box-shadow:0 0 0 3px rgba(226,54,54,.22);}
+.tick{position:absolute;bottom:-2px;font-size:13px;color:var(--ink-faint);font-family:"SF Mono",ui-monospace,monospace;}
+.here{position:absolute;top:-6px;font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--hero);transform:translateX(-50%);white-space:nowrap;text-transform:uppercase;}
+.here::after{content:"";position:absolute;left:50%;top:18px;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--hero);}
+.no-range{font-size:15px;color:var(--avail);font-style:italic;padding:14px 0;}
+.legend{display:flex;gap:22px;margin-top:14px;align-items:center;}
+.legend span{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:7px;}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+.legend i.owned{background:var(--owned);} .legend i.avail{background:var(--avail);} .legend i.none{background:#0c0e13;border:1px solid var(--none);}
+.pod{margin:20px 48px 32px;padding:18px 22px;border-radius:10px;background:#1c2129;border:1px dashed rgba(244,241,232,.18);}
+.pod .k{font-size:13px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.pod .k .mic{color:var(--hero);}
+.pod .points{font-size:20px;color:var(--ink-soft);line-height:1.5;}
+.pod .points b{color:var(--ink);font-weight:600;}
+.pod .points.empty{color:var(--ink-faint);font-style:italic;}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="card" id="card">
+    <div class="head">
+      <div class="series" id="series">— <span class="legacy">· LEGACY</span></div>
+      <div class="counter" id="counter">–/–</div>
+      <div class="pod-mark"><span class="dot"></span> BCE COMICS POD</div>
+    </div>
+    <div class="body">
+      <div class="cover-well" id="cover"><span class="ph">loading…</span></div>
+      <div class="meta">
+        <div class="badges" id="badges"></div>
+        <div class="title" id="title">—</div>
+        <div class="subtitle" id="subtitle">—</div>
+        <div class="facts" id="facts"></div>
+      </div>
+    </div>
+    <div class="ruler-wrap">
+      <div class="ruler-head">
+        <span class="label">Position in legacy run</span>
+        <span class="span" id="rulerSpan"></span>
+      </div>
+      <div class="ruler" id="ruler"><div class="track"></div></div>
+      <div class="legend">
+        <span><i class="owned"></i> Owned</span>
+        <span><i class="avail"></i> Gap — available</span>
+        <span><i class="none"></i> Gap — not released</span>
+        <span style="margin-left:auto;color:var(--hero)"><i style="background:var(--hero)"></i> This book</span>
+      </div>
+    </div>
+    <div class="pod">
+      <div class="k"><span class="mic">●</span> POD TALKING POINTS</div>
+      <div class="points" id="pod">—</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let DATA=null, books=[], idx=0, readFilter=false;
+
+const $ = id => document.getElementById(id);
+const pct = (n,max) => Math.max(0,Math.min(100,(n/max)*100));
+
+function paramIndex(){
+  const p = new URLSearchParams(location.search);
+  const i = parseInt(p.get('i'),10);
+  return Number.isFinite(i) ? i-1 : null;  // ?i=1 == first book
+}
+
+function render(){
+  if(!books.length) return;
+  idx = (idx + books.length) % books.length;
+  const b = books[idx];
+  const max = DATA.run_max || 1000;
+
+  $('series').innerHTML = (DATA.series||'').toUpperCase() + ' <span class="legacy">· LEGACY</span>';
+  $('counter').textContent = `${idx+1}/${books.length}`;
+  $('title').textContent = b.title;
+  $('subtitle').textContent = [b.year, b.format].filter(Boolean).join('  ·  ');
+
+  // badges
+  let bd = `<span class="badge format">${b.format}</span>`;
+  bd += b.read ? `<span class="badge read">✓ Read</span>` : `<span class="badge unread">Unread</span>`;
+  if(!b.verified && b.legacy_from!=null) bd += `<span class="badge unverified">range unverified</span>`;
+  $('badges').innerHTML = bd;
+
+  // facts
+  let facts = '';
+  if(b.legacy_from!=null) facts += `<div class="fact"><div class="k">Covers</div><div class="v mono">#${b.legacy_from}–${b.legacy_to}</div></div>`;
+  if(b.pages) facts += `<div class="fact"><div class="k">Pages</div><div class="v">${b.pages.toLocaleString()}</div></div>`;
+  if(b.isbn) facts += `<div class="fact"><div class="k">ISBN</div><div class="v mono">${b.isbn}</div></div>`;
+  if(b.also_in) facts += `<div class="fact"><div class="k">Also in</div><div class="v" style="color:var(--avail)">${b.also_in}</div></div>`;
+  $('facts').innerHTML = facts;
+
+  // cover
+  if(b.cover){
+    $('cover').innerHTML = `<img src="${b.cover}" alt="" onerror="this.parentNode.innerHTML='<span class=ph>cover not<br>downloaded yet</span>'">`;
+  }else{
+    $('cover').innerHTML = `<span class="ph">no ISBN<br>cover</span>`;
+  }
+
+  // ruler
+  const ruler = $('ruler');
+  ruler.innerHTML = '<div class="track"></div>';
+  if(b.legacy_from==null){
+    $('rulerSpan').textContent = 'range not set';
+    ruler.innerHTML += `<div class="no-range">Legacy range not yet looked up — run enrich_legacy.py</div>`;
+  }else{
+    (b.gaps_avail||[]).forEach(r=>{
+      const s=document.createElement('div');s.className='seg avail';
+      s.style.left=pct(r[0],max)+'%';s.style.width=(pct(r[1],max)-pct(r[0],max))+'%';
+      ruler.appendChild(s);
+    });
+    const hero=document.createElement('div');hero.className='seg hero';
+    hero.style.left=pct(b.legacy_from,max)+'%';
+    hero.style.width=Math.max(1.2,(pct(b.legacy_to,max)-pct(b.legacy_from,max)))+'%';
+    ruler.appendChild(hero);
+    const here=document.createElement('div');here.className='here';
+    here.style.left=pct((b.legacy_from+b.legacy_to)/2,max)+'%';
+    here.textContent='THIS BOOK';ruler.appendChild(here);
+    [['#1',0],['#'+Math.round(max/2),50],['#'+max,100]].forEach(([t,p])=>{
+      const el=document.createElement('div');el.className='tick';el.textContent=t;
+      if(p===0)el.style.left='0';else if(p===100)el.style.right='0';
+      else{el.style.left=p+'%';el.style.transform='translateX(-50%)';}
+      ruler.appendChild(el);
+    });
+    $('rulerSpan').textContent = `#${b.legacy_from} – #${b.legacy_to}`;
+  }
+
+  // pod
+  if(b.pod){ $('pod').className='points'; $('pod').innerHTML=b.pod; }
+  else{ $('pod').className='points empty'; $('pod').textContent='(add talking points in books.json)'; }
+}
+
+function step(d){
+  if(readFilter){
+    let n=idx;
+    for(let k=0;k<books.length;k++){ n=(n+d+books.length)%books.length; if(!books[n].read){idx=n;break;} }
+  }else{ idx+=d; }
+  render();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();step(1);}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();step(-1);}
+  else if(e.key.toLowerCase()==='r'){readFilter=!readFilter;}
+  else if(e.key.toLowerCase()==='s'){
+    const n=books.findIndex((b,i)=>i>idx && !b.verified && b.legacy_from!=null);
+    if(n>=0){idx=n;render();}
+  }
+});
+
+fetch('data/books.json')
+  .then(r=>r.json())
+  .then(d=>{
+    DATA=d; books=d.books||[];
+    const pi=paramIndex();
+    if(pi!=null) idx=pi;
+    render();
+  })
+  .catch(err=>{
+    $('cover').innerHTML='<span class="ph">books.json<br>not found</span>';
+    $('title').textContent='Could not load data/books.json';
+    $('subtitle').textContent='Serve this folder over http (see README)';
+  });
+</script>
+</body>
+</html>

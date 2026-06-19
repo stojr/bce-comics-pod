@@ -89,6 +89,16 @@ body{display:flex;align-items:center;justify-content:center;}
 .collects b{color:var(--ink);font-weight:700;}
 .chonk{margin-top:8px;width:130px;height:8px;border-radius:4px;background:#0c0e13;border:1px solid var(--line);overflow:hidden;}
 .chonk-fill{height:100%;background:var(--owned);}
+/* contents strip (prototype, ?contents=1) — the individual issues inside this book */
+.contents{padding:18px 48px 10px;}
+.contents-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+.contents-head .label{font-size:15px;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase;font-weight:600;}
+.contents-head .span{font-size:18px;color:var(--hero);font-weight:800;font-family:"SF Mono",ui-monospace,monospace;}
+.contents-strip{display:flex;gap:9px;flex-wrap:wrap;}
+.issue{position:relative;width:84px;height:126px;border-radius:4px;overflow:hidden;background:#0c0e13;border:1px solid var(--line);flex:0 0 auto;}
+.issue img{width:100%;height:100%;object-fit:cover;display:block;}
+.issue .num{position:absolute;bottom:0;left:0;right:0;font-size:11px;text-align:center;color:var(--ink);background:rgba(8,10,14,.82);padding:2px 0;font-family:"SF Mono",ui-monospace,monospace;}
+.issue.ph{display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:12px;font-family:"SF Mono",ui-monospace,monospace;}
 .kbd-hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--ink-faint);letter-spacing:.1em;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .2s;}
 body:hover .kbd-hint{opacity:.85;}   /* operator aid only — invisible on a static OBS capture */
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
@@ -133,6 +143,10 @@ body:hover .series-picker{opacity:.92;}
         <span style="margin-left:auto;color:var(--hero)"><i style="background:var(--hero)"></i> This book</span>
       </div>
     </div>
+    <div class="contents" id="contents-wrap" style="display:none">
+      <div class="contents-head"><span class="label">Inside this book</span><span class="span" id="contentsSpan"></span></div>
+      <div class="contents-strip" id="contentsStrip"></div>
+    </div>
     <div class="pod" id="pod-section">
       <div class="k"><span class="mic">●</span> POD TALKING POINTS</div>
       <div class="points" id="pod">—</div>
@@ -142,7 +156,7 @@ body:hover .series-picker{opacity:.92;}
 </div>
 
 <script>
-let DATA=null, books=[], idx=0, readFilter=false;
+let DATA=null, books=[], idx=0, readFilter=false, currentEntry=null, contentsMode=false;
 
 const $ = id => document.getElementById(id);
 const pct = (n,max) => Math.max(0,Math.min(100,(n/max)*100));
@@ -267,6 +281,26 @@ function render(){
     $('rulerSpan').textContent = `#${b.legacy_from} – #${b.legacy_to}`;
   }
 
+  // contents strip (prototype) — show the issues inside this book in place of the ruler
+  const cWrap=$('contents-wrap'), rWrap=document.querySelector('.ruler-wrap');
+  if(contentsMode && b.legacy_from!=null && b.legacy_to!=null){
+    rWrap.style.display='none'; cWrap.style.display='';
+    const sid=(currentEntry&&currentEntry.id)||'';
+    const n=b.legacy_to-b.legacy_from+1;
+    $('contentsSpan').textContent=`#${b.legacy_from} – #${b.legacy_to} · ${n} issues`;
+    const strip=$('contentsStrip'); strip.innerHTML='';
+    for(let i=b.legacy_from;i<=b.legacy_to;i++){
+      const cell=document.createElement('div'); cell.className='issue';
+      const img=document.createElement('img');
+      img.onerror=()=>{ cell.textContent='#'+i; cell.className='issue ph'; };
+      img.src=`covers/issues/${sid}/${i}.jpg`;
+      const num=document.createElement('div'); num.className='num'; num.textContent='#'+i;
+      cell.append(img,num); strip.appendChild(cell);
+    }
+  }else{
+    cWrap.style.display='none'; rWrap.style.display='';
+  }
+
   // pod — hide section entirely when empty
   const podSection = $('pod-section');
   if(b.pod){ podSection.style.display=''; $('pod').className='points'; $('pod').innerHTML=b.pod; }
@@ -336,6 +370,8 @@ async function boot(){
     const file = entry ? 'data/'+entry.file : 'data/books.json';   // fallback: legacy single file
     const d = await (await fetch(file)).json();
     DATA=d; books=d.books||[];
+    currentEntry = entry;
+    contentsMode = new URLSearchParams(location.search).get('contents')==='1';
     applyTheme(entry && entry.theme);
     populatePicker(manifest, entry ? entry.id : null);
     const pi=paramIndex();

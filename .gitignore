@@ -1,4 +1,4 @@
-covers/*.jpg
+covers/
 data/backups/
 __pycache__/
 .DS_Store

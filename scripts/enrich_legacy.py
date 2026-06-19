@@ -56,6 +56,7 @@ def main():
     # Windows consoles default to cp1252, which can't encode the ✓/≈ flags — force UTF-8.
     try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except Exception: pass
+    global DATA
     ap=argparse.ArgumentParser()
     ap.add_argument("--isbn")
     ap.add_argument("--from", dest="f", type=int)
@@ -64,8 +65,10 @@ def main():
     ap.add_argument("--pod")
     ap.add_argument("--also")
     ap.add_argument("--verified", action="store_true")
+    ap.add_argument("--data", default=DATA, help="series data file (default data/books.json)")
     args=ap.parse_args()
 
+    DATA = args.data
     d=load()
     if not args.isbn:
         review(d); return

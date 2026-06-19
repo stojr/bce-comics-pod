@@ -79,9 +79,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--isbn", default=None)
+    ap.add_argument("--data", default=DATA, help="series data file (default data/books.json)")
     args = ap.parse_args()
     os.makedirs(COVERS_DIR, exist_ok=True)
-    d = json.load(open(DATA, encoding="utf-8"))
+    d = json.load(open(args.data, encoding="utf-8"))
 
     targets = [b for b in d["books"] if b.get("isbn")]
     if args.isbn:

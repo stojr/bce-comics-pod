@@ -7,6 +7,19 @@
     "series_group": "Spider-Man: Amazing",
     "box": "Bookshelf",
     "run_max": 1000,
+    "theme": {
+      "bg": "transparent",
+      "accent": "#272525"
+    }
+  },
+  {
+    "id": "wca",
+    "label": "West Coast Avengers",
+    "file": "wca.json",
+    "csv": "export_comics.csv",
+    "series_group": "Avengers: West Coast",
+    "box": "Bookshelf",
+    "run_max": 102,
     "theme": {}
   }
 ]

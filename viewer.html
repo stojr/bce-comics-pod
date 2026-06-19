@@ -15,7 +15,7 @@
    the first un-verified book (handy while enriching ranges).
    ============================================================ */
 :root{
-  --ink:#f4f1e8; --ink-soft:#a9b0bd; --ink-faint:#6b7280;
+  --ink:#f4f1e8; --ink-soft:#a9b0bd; --ink-faint:#8b95a3;
   --line:rgba(244,241,232,.14);
   --owned:#3ec7a8; --avail:#e8a13c; --none:#5a6270;
   --hero:#e23636; --hero-deep:#a31f1f; --radius:14px;
@@ -75,9 +75,11 @@ html,body{width:1920px;height:1080px;background:transparent;overflow:hidden;
 .pod{margin:20px 48px 32px;padding:18px 22px;border-radius:10px;background:#1c2129;border:1px dashed rgba(244,241,232,.18);}
 .pod .k{font-size:13px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
 .pod .k .mic{color:var(--hero);}
-.pod .points{font-size:20px;color:var(--ink-soft);line-height:1.5;}
-.pod .points b{color:var(--ink);font-weight:600;}
-.pod .points.empty{color:var(--ink-faint);font-style:italic;}
+.pod .points{font-size:22px;color:var(--ink);line-height:1.5;}
+.pod .points b{color:var(--ink);font-weight:700;}
+.issue-range{font-size:68px;font-weight:800;color:var(--hero);letter-spacing:-.02em;line-height:1;margin:10px 0 18px;font-family:"SF Mono",ui-monospace,monospace;}
+.issue-range.unset{font-size:20px;color:var(--ink-faint);font-style:italic;font-family:inherit;font-weight:400;margin:8px 0 16px;}
+.kbd-hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--ink-faint);letter-spacing:.1em;display:flex;align-items:center;gap:10px;}
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
 </style>
 </head>
@@ -95,6 +97,7 @@ html,body{width:1920px;height:1080px;background:transparent;overflow:hidden;
         <div class="badges" id="badges"></div>
         <div class="title" id="title">—</div>
         <div class="subtitle" id="subtitle">—</div>
+        <div id="issue-range" class="issue-range"></div>
         <div class="facts" id="facts"></div>
       </div>
     </div>
@@ -111,10 +114,11 @@ html,body{width:1920px;height:1080px;background:transparent;overflow:hidden;
         <span style="margin-left:auto;color:var(--hero)"><i style="background:var(--hero)"></i> This book</span>
       </div>
     </div>
-    <div class="pod">
+    <div class="pod" id="pod-section">
       <div class="k"><span class="mic">●</span> POD TALKING POINTS</div>
       <div class="points" id="pod">—</div>
     </div>
+    <div class="kbd-hint">← → flip &nbsp;·&nbsp; R read filter &nbsp;·&nbsp; S next unverified</div>
   </div>
 </div>
 
@@ -147,11 +151,19 @@ function render(){
   if(!b.verified && b.legacy_from!=null) bd += `<span class="badge unverified">range unverified</span>`;
   $('badges').innerHTML = bd;
 
-  // facts
+  // issue range — hero display
+  const ir = $('issue-range');
+  if(b.legacy_from!=null){
+    ir.className='issue-range';
+    ir.textContent=`#${b.legacy_from} – #${b.legacy_to}`;
+  }else{
+    ir.className='issue-range unset';
+    ir.textContent='Legacy range not yet set';
+  }
+
+  // facts — ISBN removed (internal data), Covers promoted to hero above
   let facts = '';
-  if(b.legacy_from!=null) facts += `<div class="fact"><div class="k">Covers</div><div class="v mono">#${b.legacy_from}–${b.legacy_to}</div></div>`;
   if(b.pages) facts += `<div class="fact"><div class="k">Pages</div><div class="v">${b.pages.toLocaleString()}</div></div>`;
-  if(b.isbn) facts += `<div class="fact"><div class="k">ISBN</div><div class="v mono">${b.isbn}</div></div>`;
   if(b.also_in) facts += `<div class="fact"><div class="k">Also in</div><div class="v" style="color:var(--avail)">${b.also_in}</div></div>`;
   $('facts').innerHTML = facts;
 
@@ -190,9 +202,10 @@ function render(){
     $('rulerSpan').textContent = `#${b.legacy_from} – #${b.legacy_to}`;
   }
 
-  // pod
-  if(b.pod){ $('pod').className='points'; $('pod').innerHTML=b.pod; }
-  else{ $('pod').className='points empty'; $('pod').textContent='(add talking points in books.json)'; }
+  // pod — hide section entirely when empty
+  const podSection = $('pod-section');
+  if(b.pod){ podSection.style.display=''; $('pod').className='points'; $('pod').innerHTML=b.pod; }
+  else{ podSection.style.display='none'; }
 }
 
 function step(d){

@@ -58,24 +58,25 @@ body{display:flex;align-items:center;justify-content:center;}
 .fact .k{font-size:13px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:5px;}
 .fact .v{font-size:20px;color:var(--ink);font-weight:600;}
 .fact .v.mono{font-family:"SF Mono",ui-monospace,monospace;letter-spacing:-.02em;}
-.ruler-wrap{padding:22px 48px 6px;}
-.ruler-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
-.ruler-head .label{font-size:13px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase;}
-.ruler-head .span{font-size:15px;color:var(--hero);font-weight:700;font-family:"SF Mono",ui-monospace,monospace;}
-.ruler{position:relative;height:54px;}
-.track{position:absolute;left:0;right:0;top:20px;height:14px;border-radius:7px;background:#0c0e13;border:1px solid var(--line);overflow:hidden;}
-.seg{position:absolute;top:20px;height:14px;}
-.seg.owned{background:rgba(62,199,168,.42);}
-.seg.avail{background:rgba(232,161,60,.40);}
-.seg.hero{top:16px;height:22px;border-radius:5px;background:var(--hero);box-shadow:0 0 0 3px rgba(226,54,54,.22);}
-.tick{position:absolute;bottom:-2px;font-size:13px;color:var(--ink-faint);font-family:"SF Mono",ui-monospace,monospace;}
-.here{position:absolute;top:-6px;font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--hero);transform:translateX(-50%);white-space:nowrap;text-transform:uppercase;}
-.here::after{content:"";position:absolute;left:50%;top:18px;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--hero);}
-.no-range{font-size:15px;color:var(--avail);font-style:italic;padding:14px 0;}
-.legend{display:flex;gap:22px;margin-top:14px;align-items:center;}
-.legend span{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:7px;}
-.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
-.legend i.owned{background:var(--owned);} .legend i.avail{background:var(--avail);} .legend i.none{background:#0c0e13;border:1px solid var(--none);}
+.ruler-wrap{padding:26px 48px 10px;}
+.ruler-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px;}
+.ruler-head .label{font-size:15px;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase;font-weight:600;}
+.ruler-head .span{font-size:23px;color:var(--hero);font-weight:800;font-family:"SF Mono",ui-monospace,monospace;letter-spacing:-.01em;}
+.ruler{position:relative;height:72px;}
+.track{position:absolute;left:0;right:0;top:26px;height:24px;border-radius:12px;background:#272e3a;border:1px solid rgba(244,241,232,.22);overflow:hidden;}
+.seg{position:absolute;top:26px;height:24px;}
+.seg.owned{background:rgba(62,199,168,.58);}
+.seg.avail{background:rgba(232,161,60,.68);}
+.seg.hero{top:21px;height:34px;border-radius:7px;background:var(--hero);border:1px solid #ff7a7a;box-shadow:0 0 0 4px rgba(226,54,54,.30),0 6px 16px rgba(226,54,54,.38);}
+.tickmark{position:absolute;top:22px;height:32px;width:2px;background:rgba(244,241,232,.30);}
+.tick{position:absolute;top:60px;font-size:16px;font-weight:600;color:var(--ink-soft);font-family:"SF Mono",ui-monospace,monospace;}
+.here{position:absolute;top:-12px;font-size:15px;font-weight:800;letter-spacing:.1em;color:#fff;background:var(--hero);padding:3px 11px;border-radius:6px;transform:translateX(-50%);white-space:nowrap;text-transform:uppercase;box-shadow:0 3px 10px rgba(0,0,0,.45);}
+.here::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid var(--hero);}
+.no-range{font-size:17px;color:var(--avail);font-style:italic;padding:18px 0;}
+.legend{display:flex;gap:28px;margin-top:30px;align-items:center;}
+.legend span{font-size:15px;color:var(--ink);display:flex;align-items:center;gap:9px;font-weight:500;}
+.legend i{width:15px;height:15px;border-radius:4px;display:inline-block;}
+.legend i.owned{background:var(--owned);} .legend i.avail{background:var(--avail);} .legend i.none{background:#272e3a;border:1px solid var(--none);}
 .pod{margin:20px 48px 32px;padding:18px 22px;border-radius:10px;background:#1c2129;border:1px dashed rgba(244,241,232,.18);}
 .pod .k{font-size:13px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
 .pod .k .mic{color:var(--hero);}
@@ -88,7 +89,8 @@ body{display:flex;align-items:center;justify-content:center;}
 .collects b{color:var(--ink);font-weight:700;}
 .chonk{margin-top:8px;width:130px;height:8px;border-radius:4px;background:#0c0e13;border:1px solid var(--line);overflow:hidden;}
 .chonk-fill{height:100%;background:var(--owned);}
-.kbd-hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--ink-faint);letter-spacing:.1em;display:flex;align-items:center;gap:10px;}
+.kbd-hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--ink-faint);letter-spacing:.1em;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .2s;}
+body:hover .kbd-hint{opacity:.85;}   /* operator aid only — invisible on a static OBS capture */
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
 /* Series picker: hidden until the mouse is over the window, so a static OBS capture
    never shows it, but you can switch characters while previewing in a browser. */
@@ -229,24 +231,38 @@ function render(){
     $('rulerSpan').textContent = 'range not set';
     ruler.innerHTML += `<div class="no-range">Legacy range not yet looked up — run enrich_legacy.py</div>`;
   }else{
+    // OWNED coverage across the whole run — every book that has a range — so the rail
+    // shows the shelf at a glance (green chunks toward #max), not just this one book.
+    books.forEach(x=>{
+      if(x.legacy_from==null||x.legacy_to==null) return;
+      const s=document.createElement('div');s.className='seg owned';
+      s.style.left=pct(x.legacy_from,max)+'%';
+      s.style.width=Math.max(0.4,(pct(x.legacy_to,max)-pct(x.legacy_from,max)))+'%';
+      ruler.appendChild(s);
+    });
+    // this book's available-but-unowned gaps (amber)
     (b.gaps_avail||[]).forEach(r=>{
       const s=document.createElement('div');s.className='seg avail';
       s.style.left=pct(r[0],max)+'%';s.style.width=(pct(r[1],max)-pct(r[0],max))+'%';
       ruler.appendChild(s);
     });
+    // tick marks at #1 / #mid / #max
+    [['#1',0],['#'+Math.round(max/2),50],['#'+max,100]].forEach(([t,p])=>{
+      const mk=document.createElement('div');mk.className='tickmark';
+      if(p===0)mk.style.left='0';else if(p===100)mk.style.right='0';else{mk.style.left=p+'%';mk.style.transform='translateX(-50%)';}
+      ruler.appendChild(mk);
+      const el=document.createElement('div');el.className='tick';el.textContent=t;
+      if(p===0)el.style.left='0';else if(p===100)el.style.right='0';else{el.style.left=p+'%';el.style.transform='translateX(-50%)';}
+      ruler.appendChild(el);
+    });
+    // THIS BOOK — bold red marker on top of the owned coverage
     const hero=document.createElement('div');hero.className='seg hero';
     hero.style.left=pct(b.legacy_from,max)+'%';
-    hero.style.width=Math.max(1.2,(pct(b.legacy_to,max)-pct(b.legacy_from,max)))+'%';
+    hero.style.width=Math.max(2.4,(pct(b.legacy_to,max)-pct(b.legacy_from,max)))+'%';
     ruler.appendChild(hero);
     const here=document.createElement('div');here.className='here';
     here.style.left=pct((b.legacy_from+b.legacy_to)/2,max)+'%';
     here.textContent='THIS BOOK';ruler.appendChild(here);
-    [['#1',0],['#'+Math.round(max/2),50],['#'+max,100]].forEach(([t,p])=>{
-      const el=document.createElement('div');el.className='tick';el.textContent=t;
-      if(p===0)el.style.left='0';else if(p===100)el.style.right='0';
-      else{el.style.left=p+'%';el.style.transform='translateX(-50%)';}
-      ruler.appendChild(el);
-    });
     $('rulerSpan').textContent = `#${b.legacy_from} – #${b.legacy_to}`;
   }
 

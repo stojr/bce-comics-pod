@@ -60,28 +60,74 @@ def era_sort_key(issue, release_year):
     except (ValueError, TypeError):
         return 9999
 
-def load_existing_legacy(path):
-    """Preserve manual legacy ranges from a prior build, keyed by ISBN."""
+# Fields carried over from a prior build so a CSV refresh never loses manual work.
+PRESERVE_FIELDS = ("id", "order", "legacy_from", "legacy_to",
+                   "gaps_avail", "also_in", "pod", "research", "verified")
+
+def slug(s):
+    s = re.sub(r"[^a-z0-9]+", "-", clean(s).lower()).strip("-")
+    return s[:40] or "book"
+
+def load_existing(path):
+    """Preserve id/order/enrichment from a prior build so rebuilds don't lose work.
+    Returns (by_isbn, by_composite, dup_isbns, empty_isbn_count). Unique ISBNs match
+    reliably; duplicate/empty ISBNs fall back to an (isbn, title, era) composite and are
+    reported so the user knows those may not round-trip cleanly."""
     if not os.path.exists(path):
-        return {}
+        return {}, {}, [], 0
     try:
         with open(path, encoding="utf-8") as f:
             prev = json.load(f)
     except Exception:
-        return {}
-    keep = {}
-    for b in prev.get("books", []):
-        isbn = b.get("isbn")
-        if isbn and (b.get("legacy_from") is not None or b.get("verified")):
-            keep[isbn] = {
-                "legacy_from": b.get("legacy_from"),
-                "legacy_to":   b.get("legacy_to"),
-                "gaps_avail":  b.get("gaps_avail", []),
-                "also_in":     b.get("also_in", ""),
-                "pod":         b.get("pod", ""),
-                "verified":    b.get("verified", False),
-            }
-    return keep
+        return {}, {}, [], 0
+    prev_books = prev.get("books", [])
+    counts = {}
+    for b in prev_books:
+        i = clean(b.get("isbn"))
+        if i:
+            counts[i] = counts.get(i, 0) + 1
+    by_isbn, by_comp, empty = {}, {}, 0
+    for b in prev_books:
+        rec = {k: b.get(k) for k in PRESERVE_FIELDS if k in b}
+        i = clean(b.get("isbn"))
+        by_comp[(i, clean(b.get("title")), clean(b.get("era_tag")))] = rec
+        if i and counts[i] == 1:
+            by_isbn[i] = rec
+        if not i:
+            empty += 1
+    dup_isbns = sorted(i for i, c in counts.items() if c > 1)
+    return by_isbn, by_comp, dup_isbns, empty
+
+def upsert_manifest(args):
+    """Record this series in data/series.json so the viewer/editor can list it and
+    serve.py can whitelist its save target. Preserves an existing theme block."""
+    man_path = os.path.join(os.path.dirname(args.out) or ".", "series.json")
+    manifest = []
+    if os.path.exists(man_path):
+        try:
+            with open(man_path, encoding="utf-8") as f:
+                manifest = json.load(f)
+        except Exception:
+            manifest = []
+    entry = {
+        "id": args.series_id,
+        "label": args.series_label or args.series_group,
+        "file": os.path.basename(args.out),
+        "series_group": args.series_group,
+        "box": args.box,
+        "run_max": args.run_max,
+        "theme": {},
+    }
+    for e in manifest:
+        if e.get("id") == args.series_id:
+            entry["theme"] = e.get("theme", {})   # keep the user's chosen palette
+            e.clear(); e.update(entry)
+            break
+    else:
+        manifest.append(entry)
+    with open(man_path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+    print(f"Updated {man_path}: series '{args.series_id}' -> {entry['file']}")
 
 def main():
     ap = argparse.ArgumentParser()
@@ -93,9 +139,11 @@ def main():
                     help="right end of the legacy ruler")
     ap.add_argument("--series-label", default=None,
                     help="header label; defaults to the series group")
+    ap.add_argument("--series-id", default=None,
+                    help="stable id for this series (e.g. asm); writes the data/series.json manifest")
     args = ap.parse_args()
 
-    existing = load_existing_legacy(args.out)
+    by_isbn, by_comp, dup_isbns, empty_isbn = load_existing(args.out)
 
     rows = []
     with open(args.csv, encoding="utf-8-sig", newline="") as f:
@@ -121,6 +169,8 @@ def main():
             pages = None
 
         book = {
+            "id": None,            # stable identity; assigned below, preserved across rebuilds
+            "order": None,         # manual shelf order; preserved across rebuilds
             "title": title,
             "format": cat,
             "format_raw": fmt_raw,
@@ -132,20 +182,51 @@ def main():
             "read": clean(r.get("Read")).lower() == "yes",
             "status": "owned",
             "cover": f"covers/{isbn}.jpg" if isbn else "",
-            # --- enrichment fields (filled by enrich_legacy.py) ---
+            # --- enrichment fields (filled by enrich_legacy.py / editor) ---
             "legacy_from": None,
             "legacy_to": None,
             "gaps_avail": [],
             "also_in": "",
             "pod": "",
+            "research": [],
             "verified": False,
         }
-        # merge preserved enrichment
-        if isbn in existing:
-            book.update({k: v for k, v in existing[isbn].items() if v not in (None, "", [])})
+        # preserve id/order/enrichment from the prior build (unique ISBN, else composite)
+        comp = (isbn, title, clean(r.get("Issue")))
+        rec = by_isbn.get(isbn) if (isbn and isbn in by_isbn) else by_comp.get(comp)
+        if rec:
+            book["id"] = rec.get("id")
+            book["order"] = rec.get("order")
+            book.update({k: v for k, v in rec.items()
+                         if k not in ("id", "order") and v not in (None, "", [])})
         books.append(book)
 
-    books.sort(key=lambda b: (era_sort_key(b["era_tag"], b["year"]), b["year"] or 9999))
+    # assign/repair stable ids: keep a valid unique id, otherwise fill it in. This also
+    # breaks duplicates — a composite match on duplicate ISBNs can preserve the same id
+    # onto two books, and ids must stay unique within the series.
+    seen_ids = set()
+    for b in books:
+        bid = b.get("id")
+        if bid and bid not in seen_ids:
+            seen_ids.add(bid)
+            continue
+        base = b["isbn"] if b["isbn"] else slug(b["title"])
+        cand, n = base, 2
+        while cand in seen_ids:
+            cand = f"{base}-{n}"; n += 1
+        b["id"] = cand
+        seen_ids.add(cand)
+
+    # ordering: a preserved manual order wins; brand-new books fall in by era at the end;
+    # then renumber to gapped 10/20/30 by final position (keeps gaps for future inserts).
+    INF = float("inf")
+    if any(b.get("order") is not None for b in books):
+        books.sort(key=lambda b: (b["order"] if b.get("order") is not None else INF,
+                                  era_sort_key(b["era_tag"], b["year"]), b["year"] or 9999, b["id"]))
+    else:
+        books.sort(key=lambda b: (era_sort_key(b["era_tag"], b["year"]), b["year"] or 9999, b["id"]))
+    for i, b in enumerate(books):
+        b["order"] = (i + 1) * 10
 
     out = {
         "series": args.series_label or args.series_group,
@@ -157,9 +238,17 @@ def main():
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         json.dump(out, f, indent=2, ensure_ascii=False)
 
+    if args.series_id:
+        upsert_manifest(args)
+
     enriched = sum(1 for b in books if b["legacy_from"] is not None)
     print(f"Wrote {args.out}: {len(books)} books "
           f"({enriched} with legacy ranges, {len(books)-enriched} need enrichment)")
+    if dup_isbns:
+        print(f"  WARNING: duplicate ISBNs in prior data {dup_isbns} — enrichment for these is "
+              f"matched by title+era, not ISBN alone; verify they round-tripped.")
+    if empty_isbn:
+        print(f"  NOTE: {empty_isbn} book(s) had no ISBN; matched by title+era and given a slug id.")
 
 if __name__ == "__main__":
     main()

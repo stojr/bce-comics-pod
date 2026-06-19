@@ -16,12 +16,23 @@ to talk, so each slide has a dedicated "pod talking points" area.
 export_comics.csv          CLZ Comics export (raw, all 11k+ issues)
    │  build_books.py        filter to one shelf + map formats + order
    ▼
-data/books.json            the 60 shelf books, seeded
+data/<id>.json             the shelf books for one series (e.g. data/books.json)
+data/series.json           manifest: [{id,label,file,series_group,box,run_max,theme}]
    │  enrich_legacy.py      add legacy_from/legacy_to/gaps  (the lookup)
    │  fetch_covers.py       download covers/<isbn>.jpg by ISBN
    ▼
 viewer.html                OBS browser source — arrow keys or ?i=N
 ```
+
+## Data model (per book)
+Each book has a stable `id` (survives CSV rebuilds — never re-derive it) and an
+`order` integer (gapped 10/20/30; manual reorder survives rebuilds). Enrichment
+(`legacy_from/to`, `gaps_avail`, `pod`, `also_in`, `research[]`, `verified`) is
+preserved across rebuilds, matched by ISBN — or by an (isbn,title,era) composite
+for the few duplicate/empty ISBNs (build prints a warning for those). The manifest
+`data/series.json` lists every series; it's the whitelist serve.py uses to resolve
+`/save?series=<id>` to a file (no path traversal) and stores per-series CLZ build
+params + the color `theme`. build_books.py `--series-id <id>` upserts the manifest.
 
 ## Key facts about the data
 - Source: CLZ Comics (https://clz.com/comics) CSV export.

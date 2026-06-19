@@ -4,6 +4,8 @@
   "count": 60,
   "books": [
     {
+      "id": "9780785188346",
+      "order": 10,
       "title": "Great Power",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -20,9 +22,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785195818",
+      "order": 20,
       "title": "Great Responsibility",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -39,9 +44,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302910235",
+      "order": 30,
       "title": "Spider-Man No More",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -58,9 +66,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302917807",
+      "order": 40,
       "title": "The Goblin Lives",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -77,9 +88,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302921965",
+      "order": 50,
       "title": "The Secret of The Petrified Tablet",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -96,9 +110,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302929084",
+      "order": 60,
       "title": "The Death of Captain Stacy",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -115,9 +132,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302904074",
+      "order": 70,
       "title": "The Goblin's Last Stand",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -134,9 +154,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302933500",
+      "order": 80,
       "title": "Man-Wolf At Midnight",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -153,9 +176,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302948740",
+      "order": 90,
       "title": "Spider-Man or Spider-Clone?",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -172,9 +198,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302955267",
+      "order": 100,
       "title": "Big Apple Battleground",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -191,9 +220,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302960483",
+      "order": 110,
       "title": "Nine Lives",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -210,9 +242,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302960490",
+      "order": 120,
       "title": "(title needs lookup)",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -229,9 +264,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302967789",
+      "order": 130,
       "title": "Nothing Can Stop the Juggernaut",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -248,9 +286,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785189169",
+      "order": 140,
       "title": "Ghosts of the Past",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -267,9 +308,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785188674",
+      "order": 150,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -286,9 +330,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785190035",
+      "order": 160,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -305,9 +352,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302907051",
+      "order": 170,
       "title": "Kraven's Last Hunt",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -324,9 +374,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302911423",
+      "order": 180,
       "title": "Venom",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -343,9 +396,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "024885200010",
+      "order": 190,
       "title": "The Saga of the Alien Costume",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -362,9 +418,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785187899",
+      "order": 200,
       "title": "Cosmic Adventures",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -381,9 +440,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302918118",
+      "order": 210,
       "title": "Assassin Nation",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -400,9 +462,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "75960635616499117",
+      "order": 220,
       "title": "(title needs lookup)",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -419,9 +484,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780871357045",
+      "order": 230,
       "title": "Peter Parker, The Spectacular Spider-Man, Vol. 1 #107-110",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -438,9 +506,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785196914",
+      "order": 240,
       "title": "Powerless - The Return of the Sinister Six, Return Of The Sinister Six",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -457,9 +528,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302950545",
+      "order": 250,
       "title": "Round Robin",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -476,9 +550,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302948320",
+      "order": 260,
       "title": "Invasion of the Spider-Slayers",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -495,9 +572,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302951047",
+      "order": 270,
       "title": "The Hero Killers",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -514,9 +594,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "75960635971400112",
+      "order": 280,
       "title": "Carnage",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -533,9 +616,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302921903",
+      "order": 290,
       "title": "Maximum Carnage",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -552,9 +638,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302930691",
+      "order": 300,
       "title": "Pursuit - Lifetheft",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -571,9 +660,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302953669",
+      "order": 310,
       "title": "The Clone Saga",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -590,9 +682,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302960087",
+      "order": 320,
       "title": "Web Life Web Death",
       "format": "Epic Collection",
       "format_raw": "Epic Collection",
@@ -609,9 +704,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785157595",
+      "order": 330,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -628,9 +726,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785159667",
+      "order": 340,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -647,9 +748,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785159773",
+      "order": 350,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -666,9 +770,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302964450",
+      "order": 360,
       "title": "Coming Home",
       "format": "Modern Era Epic",
       "format_raw": "Epic Collection: Modern",
@@ -685,9 +792,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "the-life-and-death-of-spiders",
+      "order": 370,
       "title": "The Life and Death of Spiders",
       "format": "Modern Era Epic",
       "format_raw": "Epic Collection: Modern",
@@ -704,28 +814,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
-      "title": "(title needs lookup)",
-      "format": "Complete Collection",
-      "format_raw": "Thick Trade",
-      "on_spine": true,
-      "year": 2016,
-      "era_tag": "2004",
-      "isbn": "9781302900632",
-      "pages": 512,
-      "read": false,
-      "status": "owned",
-      "cover": "covers/9781302900632.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
-      "gaps_avail": [],
-      "also_in": "",
-      "pod": "",
-      "verified": false
-    },
-    {
+      "id": "9780785195610",
+      "order": 380,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -742,9 +836,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302900632",
+      "order": 390,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -761,9 +858,34 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302900632-2",
+      "order": 400,
+      "title": "(title needs lookup)",
+      "format": "Complete Collection",
+      "format_raw": "Thick Trade",
+      "on_spine": true,
+      "year": 2016,
+      "era_tag": "2004",
+      "isbn": "9781302900632",
+      "pages": 512,
+      "read": false,
+      "status": "owned",
+      "cover": "covers/9781302900632.jpg",
+      "legacy_from": null,
+      "legacy_to": null,
+      "gaps_avail": [],
+      "also_in": "",
+      "pod": "",
+      "research": [],
+      "verified": false
+    },
+    {
+      "id": "9780785195610-2",
+      "order": 410,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -780,9 +902,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "sins-past",
+      "order": 420,
       "title": "Sins Past",
       "format": "Modern Era Epic",
       "format_raw": "Epic Collection: Modern",
@@ -799,9 +924,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302907037",
+      "order": 430,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -818,9 +946,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785125044",
+      "order": 440,
       "title": "Amazing Spider-Man #88-92, 121-122",
       "format": "Hardcover",
       "format_raw": "Hardcover",
@@ -837,9 +968,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302907990",
+      "order": 450,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -856,9 +990,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302918453",
+      "order": 460,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -875,9 +1012,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302915629",
+      "order": 470,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -894,9 +1034,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785146209",
+      "order": 480,
       "title": "One Moment in Time",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -913,9 +1056,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785146223",
+      "order": 490,
       "title": "Origin Of The Species",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -932,9 +1078,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302925154",
+      "order": 500,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -951,9 +1100,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302965839",
+      "order": 510,
       "title": "Big Time",
       "format": "Modern Era Epic",
       "format_raw": "Epic Collection: Modern",
@@ -970,9 +1122,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785162292",
+      "order": 520,
       "title": "(title needs lookup)",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
@@ -989,9 +1144,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9780785151050",
+      "order": 530,
       "title": "(title needs lookup)",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -1008,9 +1166,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302903268",
+      "order": 540,
       "title": "(title needs lookup)",
       "format": "Hardcover",
       "format_raw": "Hardcover",
@@ -1027,9 +1188,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302919047",
+      "order": 550,
       "title": "(title needs lookup)",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -1046,9 +1210,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302921453",
+      "order": 560,
       "title": "(title needs lookup)",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -1065,9 +1232,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302927578",
+      "order": 570,
       "title": "(title needs lookup)",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -1084,9 +1254,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302928001",
+      "order": 580,
       "title": "(title needs lookup)",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
@@ -1103,9 +1276,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302949624",
+      "order": 590,
       "title": "Beyond",
       "format": "Omnibus",
       "format_raw": "Omni",
@@ -1122,9 +1298,12 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     },
     {
+      "id": "9781302949914",
+      "order": 600,
       "title": "Amazing Spider-Man, Vol. 1 #544-545, Sensational Spider-Man #41, Friendly Neighborhood Spider-Man #24 and Marvel Spotlight: Spider-Man--One More Day",
       "format": "Treasury",
       "format_raw": "Treasury",
@@ -1141,6 +1320,7 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
+      "research": [],
       "verified": false
     }
   ]

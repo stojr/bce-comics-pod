@@ -151,7 +151,12 @@
       "cover": "covers/9781302956448.jpg",
       "legacy_from": 83,
       "legacy_to": 95,
-      "gaps_avail": [],
+      "gaps_avail": [
+        [
+          96,
+          102
+        ]
+      ],
       "also_in": "",
       "pod": "",
       "research": [],

@@ -6,9 +6,10 @@ Runs on YOUR PC (needs internet). Reads data/books.json, fetches a cover
 for every book that has an ISBN and doesn't already have covers/<isbn>.jpg,
 and saves it there. The viewer references covers/<isbn>.jpg automatically.
 
-Primary source: Google Books API (no key needed for cover thumbnails).
-You already have an isbn-lookup MCP built on the same API — this is the
-plain-HTTP equivalent so it runs unattended.
+Sources tried in order:
+  1. Google Books API (no key, but thumbnails are small ~128px)
+  2. Open Library (larger, but sparse for recent Marvel)
+  3. Comic Vine API (high-res trade/collected-edition covers; best for Marvel)
 
 USAGE
   python scripts/fetch_covers.py
@@ -16,39 +17,48 @@ USAGE
   python scripts/fetch_covers.py --isbn 9780785188346   # just one
 
 NOTE
-  Google Books thumbnails are small (~128px wide). For crisp 1080p slides
-  you may want higher-res art. Two upgrades, in order of effort:
-    1. Swap COVER_SOURCES to add openlibrary covers (size 'L').
-    2. For Marvel-accurate trade dress, drop a hi-res jpg into covers/
-       named <isbn>.jpg by hand — the fetcher won't overwrite it unless
-       you pass --force.
+  For Marvel-accurate trade dress, drop a hi-res jpg into covers/ named
+  <isbn>.jpg by hand — the fetcher won't overwrite it unless you pass --force.
 """
 import argparse, json, os, sys, time, urllib.request, urllib.parse
 
 COVERS_DIR = "covers"
 DATA = "data/books.json"
 
-def google_books_cover(isbn):
+def google_books_cover(isbn, **_):
     url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + urllib.parse.quote(isbn)
     try:
         with urllib.request.urlopen(url, timeout=15) as r:
             j = json.load(r)
-    except Exception as e:
+    except Exception:
         return None
     items = j.get("items") or []
     if not items: return None
     img = (items[0].get("volumeInfo",{}).get("imageLinks") or {})
-    # prefer the largest available
     for k in ("extraLarge","large","medium","thumbnail","smallThumbnail"):
         if k in img:
             return img[k].replace("http://","https://").replace("&edge=curl","")
     return None
 
-def openlibrary_cover(isbn):
+def openlibrary_cover(isbn, **_):
     # Large size; returns a 1x1 pixel if missing, so caller should sanity-check size
     return f"https://covers.openlibrary.org/b/isbn/{isbn}-L.jpg"
 
-COVER_SOURCES = [google_books_cover, openlibrary_cover]
+def comic_vine_cover(isbn, title="", series="", **_):
+    """Comic Vine collected-edition lookup. Returns a cover URL or None."""
+    try:
+        import sys as _sys, os as _os
+        _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+        from comic_cover_fetch import fetch_comic_synopsis
+        if not title or title == "(title needs lookup)":
+            return None
+        query = f"{series}: {title}" if series else title
+        _, cover_url = fetch_comic_synopsis(collection=query)
+        return cover_url or None
+    except Exception:
+        return None
+
+COVER_SOURCES = [google_books_cover, openlibrary_cover, comic_vine_cover]
 
 def download(url, path):
     try:
@@ -75,15 +85,17 @@ def main():
         targets = [b for b in targets if b["isbn"]==args.isbn]
 
     got=skip=miss=0
+    series=d.get("series","")
     for b in targets:
         isbn=b["isbn"]; path=os.path.join(COVERS_DIR, isbn+".jpg")
         if os.path.exists(path) and not args.force:
             skip+=1; continue
         url=None
+        ctx=dict(isbn=isbn, title=b.get("title",""), series=series)
         for src in COVER_SOURCES:
-            url=src(isbn)
+            url=src(**ctx)
             if url and download(url, path):
-                print(f"  ✓ {isbn}  {b['title'][:40]}")
+                print(f"  ✓ {isbn}  [{src.__name__}]  {b['title'][:40]}")
                 got+=1; break
         else:
             print(f"  ✗ {isbn}  {b['title'][:40]}  (no cover found)")

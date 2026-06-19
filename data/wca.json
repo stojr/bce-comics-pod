@@ -17,13 +17,13 @@
       "read": true,
       "status": "owned",
       "cover": "covers/9781302914233.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 1,
+      "legacy_to": 7,
       "gaps_avail": [],
       "also_in": "",
-      "pod": "",
+      "pod": "Team debut · also collects the 1984 4-issue limited series · Hawkeye & Mockingbird form the West Coast branch",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302919719",
@@ -39,13 +39,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302919719.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 8,
+      "legacy_to": 24,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302923167",
@@ -61,13 +61,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302923167.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 25,
+      "legacy_to": 37,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302927424",
@@ -83,13 +83,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302927424.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 38,
+      "legacy_to": 52,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302931988",
@@ -105,13 +105,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302931988.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 53,
+      "legacy_to": 64,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302951016",
@@ -127,13 +127,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302951016.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 65,
+      "legacy_to": 82,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302956448",
@@ -149,13 +149,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302956448.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 83,
+      "legacy_to": 95,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     }
   ]
 }

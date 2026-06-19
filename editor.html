@@ -358,7 +358,8 @@ async function research(){
   if(cur<0) return;
   const b=DATA.books[cur];
   const label=(state.series&&state.series.label)||DATA.series||'';
-  let url='/api/research?series='+encodeURIComponent(label)+'&title='+encodeURIComponent(b.title||'');
+  let url='/api/research?series='+encodeURIComponent(label)+'&title='+encodeURIComponent(b.title||'')
+          +'&format='+encodeURIComponent(b.format||'');   // match the right edition, not a same-titled trade
   if(b.legacy_from!=null) url+='&from='+b.legacy_from+'&to='+(b.legacy_to??'');
   $('researchOut').textContent='searching…'; $('researchStatus').textContent=''; $('researchAdd').style.display='none';
   try{

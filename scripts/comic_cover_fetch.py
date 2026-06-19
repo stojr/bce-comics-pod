@@ -113,6 +113,22 @@ def _word_overlap(a: str, b: str) -> int:
     return len(wa & wb)
 
 
+# Collected-edition keywords. A book titled e.g. "Vision Quest" exists as both a
+# plain trade AND an Epic Collection that collect DIFFERENT issues — matching the
+# edition keeps the lookup on the right one.
+EDITIONS = ("epic collection", "omnibus", "complete collection", "masterworks",
+            "compendium", "compact", "modern era epic")
+
+def _edition_of(text: str) -> str:
+    """Canonical edition keyword found in a format/title string, or '' (plain trade).
+    'Modern Era Epic' normalizes to 'epic collection' (Comic Vine labels both 'Epic')."""
+    t = _norm(text or "")
+    for e in EDITIONS:
+        if e in t:
+            return "epic collection" if e == "modern era epic" else e
+    return ""
+
+
 # --------------------------------------------------------------------------
 # Local cover matching (avoids re-downloading)
 # --------------------------------------------------------------------------
@@ -177,6 +193,7 @@ def fetch_comic_synopsis(
     collection: str = "",
     issue_title: str = "",
     api_key: str | None = None,
+    edition: str = "",
 ) -> tuple[str, str]:
     """
     Fetch (synopsis_text, cover_url) from Comic Vine. Either may be "" on failure.
@@ -200,15 +217,20 @@ def fetch_comic_synopsis(
     try:
         # ---- COLLECTED EDITION ----
         if is_collection:
+            # Which edition are we after? Caller passes the book's format explicitly,
+            # else we detect it from the collection string. A plain trade -> "" (no bias).
+            edition_kw = _edition_of(edition) or _edition_of(collection)
             coll_clean = re.sub(
                 r"\b(Epic Collection|Omnibus|Masterworks|Visionaries|Classic|"
                 r"Complete|Ultimate|Modern Era|By The|Vol\.?|Volume|v\d+)\b",
                 "", collection, flags=re.IGNORECASE,
             )
             coll_clean = re.sub(r"\s*\d+\s*$", "", coll_clean).strip()
-            query = " ".join(p for p in (coll_clean, issue_title) if p)
-            if not query:
+            base_query = " ".join(p for p in (coll_clean, issue_title) if p)
+            if not base_query:
                 return ("", "")
+            # Include the edition in the search so Comic Vine surfaces the right printing.
+            query = (base_query + " " + edition_kw).strip() if edition_kw else base_query
 
             vol_url = (
                 f"{CV_BASE}/search/?api_key={key}&format=json"
@@ -220,8 +242,17 @@ def fetch_comic_synopsis(
                 _log(f"no collection found for '{query}'", "warn")
                 return ("", "")
 
-            best = max(volumes, key=lambda v: _word_overlap(query, v.get("name", "")))
-            _log(f"collection match: '{best.get('name', '?')}'")
+            def _score(v):
+                name = v.get("name", "")
+                s = _word_overlap(base_query, name)
+                if edition_kw and edition_kw in _norm(name):
+                    s += 5                          # strongly prefer the matching edition
+                elif edition_kw and any(e in _norm(name) for e in EDITIONS if e != edition_kw):
+                    s -= 1                           # a different named edition is likely wrong
+                return s
+            best = max(volumes, key=_score)
+            _log(f"collection match: '{best.get('name', '?')}'"
+                 + (f" [want: {edition_kw}]" if edition_kw else ""))
             img = best.get("image") or {}
             cover_url = img.get("super_url") or img.get("medium_url") or ""
             desc = _strip_html(best.get("description") or "") or (best.get("deck") or "").strip()

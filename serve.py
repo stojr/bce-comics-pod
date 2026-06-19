@@ -112,7 +112,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self._send_json(500, {"error": f"research module unavailable: {e}"}); return
         try:
-            summary, _cover = fetch_comic_synopsis(collection=coll)
+            summary, _cover = fetch_comic_synopsis(collection=coll, edition=self._query("format", ""))
         except Exception as e:
             self._send_json(502, {"error": f"lookup failed: {e}"}); return
         frm, to = self._query("from", ""), self._query("to", "")

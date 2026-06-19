@@ -44,8 +44,10 @@ def openlibrary_cover(isbn, **_):
     # Large size; returns a 1x1 pixel if missing, so caller should sanity-check size
     return f"https://covers.openlibrary.org/b/isbn/{isbn}-L.jpg"
 
-def comic_vine_cover(isbn, title="", series="", **_):
-    """Comic Vine collected-edition lookup. Returns a cover URL or None."""
+def comic_vine_cover(isbn, title="", series="", fmt="", **_):
+    """Comic Vine collected-edition lookup. Returns a cover URL or None.
+    `fmt` is the book's format so we fetch the right edition's cover, not a
+    same-titled plain trade."""
     try:
         import sys as _sys, os as _os
         _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
@@ -53,7 +55,7 @@ def comic_vine_cover(isbn, title="", series="", **_):
         if not title or title == "(title needs lookup)":
             return None
         query = f"{series}: {title}" if series else title
-        _, cover_url = fetch_comic_synopsis(collection=query)
+        _, cover_url = fetch_comic_synopsis(collection=query, edition=fmt)
         return cover_url or None
     except Exception:
         return None
@@ -95,7 +97,7 @@ def main():
         if os.path.exists(path) and not args.force:
             skip+=1; continue
         url=None
-        ctx=dict(isbn=isbn, title=b.get("title",""), series=series)
+        ctx=dict(isbn=isbn, title=b.get("title",""), series=series, fmt=b.get("format",""))
         for src in COVER_SOURCES:
             url=src(**ctx)
             if url and download(url, path):

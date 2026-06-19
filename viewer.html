@@ -81,8 +81,13 @@ body{display:flex;align-items:center;justify-content:center;}
 .pod .k .mic{color:var(--hero);}
 .pod .points{font-size:22px;color:var(--ink);line-height:1.5;}
 .pod .points b{color:var(--ink);font-weight:700;}
-.issue-range{font-size:68px;font-weight:800;color:var(--hero);letter-spacing:-.02em;line-height:1;margin:10px 0 18px;font-family:"SF Mono",ui-monospace,monospace;}
+.issue-range{font-size:68px;font-weight:800;color:var(--hero);letter-spacing:-.02em;line-height:1;margin:10px 0 6px;font-family:"SF Mono",ui-monospace,monospace;}
 .issue-range.unset{font-size:20px;color:var(--ink-faint);font-style:italic;font-family:inherit;font-weight:400;margin:8px 0 16px;}
+/* WALK-1: the explicit "one thick book = N individual issues" line */
+.collects{font-size:18px;color:var(--ink-soft);margin:0 0 18px;font-weight:500;}
+.collects b{color:var(--ink);font-weight:700;}
+.chonk{margin-top:8px;width:130px;height:8px;border-radius:4px;background:#0c0e13;border:1px solid var(--line);overflow:hidden;}
+.chonk-fill{height:100%;background:var(--owned);}
 .kbd-hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--ink-faint);letter-spacing:.1em;display:flex;align-items:center;gap:10px;}
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
 /* Series picker: hidden until the mouse is over the window, so a static OBS capture
@@ -109,6 +114,7 @@ body:hover .series-picker{opacity:.92;}
         <div class="title" id="title">—</div>
         <div class="subtitle" id="subtitle">—</div>
         <div id="issue-range" class="issue-range"></div>
+        <div id="collects" class="collects"></div>
         <div class="facts" id="facts"></div>
       </div>
     </div>
@@ -183,9 +189,25 @@ function render(){
     ir.textContent='Legacy range not yet set';
   }
 
-  // facts — ISBN removed (internal data), Covers promoted to hero above
+  // WALK-1: spell out "one thick book = N individual issues" (the core message)
+  const col = $('collects'); col.textContent='';
+  if(b.legacy_from!=null && b.legacy_to!=null){
+    const n = b.legacy_to - b.legacy_from + 1;
+    const f=document.createElement('b'); f.textContent=b.format;
+    const c=document.createElement('b'); c.textContent=n;
+    col.append('This ', f, ' collects ', c, ' issue'+(n!==1?'s':'')+' in one book');
+    col.style.display='';
+  } else { col.style.display='none'; }
+
+  // facts — ISBN removed (internal data), Covers promoted to hero above.
+  // Pages gets a "chonk" bar normalized to the thickest book in the series.
   let facts = '';
-  if(b.pages) facts += `<div class="fact"><div class="k">Pages</div><div class="v">${b.pages.toLocaleString()}</div></div>`;
+  if(b.pages){
+    const maxP = Math.max(1, ...books.map(x=>x.pages||0));
+    const w = Math.round((b.pages/maxP)*100);
+    facts += `<div class="fact"><div class="k">Pages</div><div class="v">${b.pages.toLocaleString()}</div>`+
+             `<div class="chonk"><div class="chonk-fill" style="width:${w}%"></div></div></div>`;
+  }
   if(b.also_in) facts += `<div class="fact"><div class="k">Also in</div><div class="v" style="color:var(--avail)">${b.also_in}</div></div>`;
   $('facts').innerHTML = facts;
 

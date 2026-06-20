@@ -27,7 +27,7 @@ THREE WAYS TO USE IT
 Everything writes back to data/books.json. build_books.py preserves these
 fields on rebuild (matched by ISBN), so you only do the lookup once.
 """
-import argparse, json, sys
+import argparse, json, sys, os
 
 DATA = "data/books.json"
 
@@ -57,6 +57,7 @@ def main():
     try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except Exception: pass
     global DATA
+    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # so it runs from any folder
     ap=argparse.ArgumentParser()
     ap.add_argument("--isbn")
     ap.add_argument("--from", dest="f", type=int)

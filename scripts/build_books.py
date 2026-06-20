@@ -131,6 +131,7 @@ def upsert_manifest(args):
     print(f"Updated {man_path}: series '{args.series_id}' -> {entry['file']}")
 
 def main():
+    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # so it runs from any folder
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", required=True)
     ap.add_argument("--series-group", required=True)

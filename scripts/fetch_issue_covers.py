@@ -66,6 +66,7 @@ def issues_for_data(data_path, max_gap):
 def main():
     try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except Exception: pass
+    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # so it runs from any folder
     ap = argparse.ArgumentParser()
     ap.add_argument("--series", required=True, help="Comic Vine series name")
     ap.add_argument("--id", required=True, help="series id (folder under covers/issues/)")

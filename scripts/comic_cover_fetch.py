@@ -274,13 +274,16 @@ def fetch_comic_synopsis(
             vol_url = (
                 f"{CV_BASE}/search/?api_key={key}&format=json"
                 f"&query={urllib.parse.quote(series)}&resources=volume"
-                f"&field_list=id,name,publisher&limit=10"
+                f"&field_list=id,name,publisher,count_of_issues,start_year&limit=10"
             )
             volumes = _fetch_json(vol_url).get("results", [])
             if not volumes:
                 _log(f"no volume found for '{series}'", "warn")
                 return ("", "")
-            best_vol = max(volumes, key=lambda v: _word_overlap(series, v.get("name", "")))
+            # best name overlap, then the volume with the MOST issues — so we get the main
+            # run, not a tiny same-named reprint/digital volume (e.g. a 2-issue 'ASM')
+            best_vol = max(volumes, key=lambda v: (_word_overlap(series, v.get("name", "")),
+                                                   v.get("count_of_issues") or 0))
             vol_id = best_vol.get("id")
             vol_name = best_vol.get("name", "?")
             _VOL_CACHE[cache_key] = (vol_id, vol_name)

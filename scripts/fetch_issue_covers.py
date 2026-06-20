@@ -110,6 +110,7 @@ def main():
     ap.add_argument("--data", help="series data file — fetch the whole shelf + small gaps")
     ap.add_argument("--max-gap", type=int, default=25, help="largest gap (issues) to fill")
     ap.add_argument("--alt-series", default=None, help="fallback series name for a renumbered run")
+    ap.add_argument("--delay", type=float, default=1.0, help="seconds between issues (slower avoids Comic Vine burst throttling / HTTP 420)")
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
@@ -143,7 +144,7 @@ def main():
                 print(f"  ✗ #{n} ({e})"); miss += 1
         else:
             print(f"  ✗ #{n} (no cover found)"); miss += 1
-        time.sleep(0.4)
+        time.sleep(args.delay)
     print(f"\nIssue covers [{args.id}]: {got} downloaded, {skip} already present, {miss} missing")
 
 if __name__ == "__main__":

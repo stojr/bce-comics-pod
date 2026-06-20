@@ -63,7 +63,7 @@ body{display:flex;align-items:center;justify-content:center;}
 .ruler-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px;}
 .ruler-head .label{font-size:15px;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase;font-weight:600;}
 .ruler-head .span{font-size:23px;color:var(--hero);font-weight:800;font-family:"SF Mono",ui-monospace,monospace;letter-spacing:-.01em;}
-.ruler{position:relative;height:72px;}
+.ruler{position:relative;height:72px;cursor:pointer;}
 .track{position:absolute;left:0;right:0;top:26px;height:24px;border-radius:12px;background:#272e3a;border:1px solid rgba(244,241,232,.22);overflow:hidden;}
 .seg{position:absolute;top:26px;height:24px;}
 .seg.owned{background:rgba(62,199,168,.58);}
@@ -100,6 +100,7 @@ body{display:flex;align-items:center;justify-content:center;}
 .issue img{width:100%;height:100%;object-fit:cover;display:block;}
 .issue .num{position:absolute;bottom:0;left:0;right:0;font-size:11px;text-align:center;color:var(--ink);background:rgba(8,10,14,.82);padding:2px 0;font-family:"SF Mono",ui-monospace,monospace;}
 .issue.ph{display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:12px;font-family:"SF Mono",ui-monospace,monospace;}
+.issue.gap{opacity:.62;border-color:var(--avail);box-shadow:inset 0 0 0 2px rgba(232,161,60,.55);}  /* available, not owned */
 .kbd-hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--ink-faint);letter-spacing:.1em;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .2s;}
 body:hover .kbd-hint{opacity:.85;}   /* operator aid only — invisible on a static OBS capture */
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
@@ -169,6 +170,24 @@ function fitStage(){
   if(st) st.style.transform = 'scale('+s+')';
 }
 window.addEventListener('resize', fitStage);
+
+// Click the timeline to jump to the book at that position in the run.
+window.addEventListener('load', ()=>{
+  const r=$('ruler'); if(!r) return;
+  r.addEventListener('click', e=>{
+    if(!books.length || !DATA) return;
+    const rect=r.getBoundingClientRect();
+    const legacy=((e.clientX-rect.left)/rect.width)*(DATA.run_max||1000);
+    let target=-1, best=Infinity;
+    books.forEach((bk,i)=>{
+      if(bk.legacy_from==null||bk.legacy_to==null) return;
+      const d=(legacy>=bk.legacy_from && legacy<=bk.legacy_to) ? 0
+             : Math.min(Math.abs(legacy-bk.legacy_from), Math.abs(legacy-bk.legacy_to));
+      if(d<best){ best=d; target=i; }
+    });
+    if(target>=0){ idx=target; render(); }
+  });
+});
 
 // Collapse multiple physical copies of the same book into one slide (with a ×N badge),
 // so the walkthrough doesn't flip past the same edition twice. Keyed by title.
@@ -295,17 +314,20 @@ function render(){
     $('rulerSpan').textContent = `#${b.legacy_from} – #${b.legacy_to}`;
   }
 
-  // contents strip (deep-dive scene) — show the issue covers BELOW the legacy timeline
-  const cWrap=$('contents-wrap');
+  // contents strip (deep-dive scene) — issue covers BELOW the legacy timeline, INCLUDING
+  // available-gap issues (amber/dimmed) so you can see what the run is missing.
+  const cWrap=$('contents-wrap'), legendEl=document.querySelector('.legend');
   if(contentsMode && b.legacy_from!=null && b.legacy_to!=null){
-    cWrap.style.display='';
+    cWrap.style.display=''; if(legendEl) legendEl.style.display='none';   // legend overlaps the wall
     const sid=(currentEntry&&currentEntry.id)||'';
-    const n=b.legacy_to-b.legacy_from+1;
-    $('contentsSpan').textContent=`#${b.legacy_from} – #${b.legacy_to} · ${n} issues`;
+    const cells=[];                                       // [issue, isGap]
+    for(let i=b.legacy_from;i<=b.legacy_to;i++) cells.push([i,false]);
+    (b.gaps_avail||[]).forEach(g=>{ for(let i=g[0];i<=g[1];i++) cells.push([i,true]); });
+    const n=cells.length;
+    $('contentsSpan').textContent=`#${b.legacy_from} – #${b.legacy_to} · ${b.legacy_to-b.legacy_from+1} issues`;
     const strip=$('contentsStrip'); strip.innerHTML='';
-    // size covers to fill the width in as few rows as possible (bigger = better on stream)
-    // size covers to fill the width AND fit a fixed height budget, so cover + timeline
-    // + wall always stay inside the 1920x1080 OBS frame whatever the issue count
+    // size covers to fill the width AND fit a height budget, so cover + timeline + wall
+    // always stay inside the 1920x1080 OBS frame whatever the issue count
     const usable=1084, gap=10, wallBudget=330;
     const rows = n<=12 ? 1 : n<=24 ? 2 : 3;
     const perRow = Math.ceil(n/rows);
@@ -313,17 +335,17 @@ function render(){
     const maxW = Math.floor((wallBudget-(rows-1)*gap)/rows/1.5);
     const w = Math.max(58, Math.min(fillW, maxW));
     const h = Math.round(w*1.5);
-    for(let i=b.legacy_from;i<=b.legacy_to;i++){
-      const cell=document.createElement('div'); cell.className='issue';
+    cells.forEach(([i,isGap])=>{
+      const cell=document.createElement('div'); cell.className='issue'+(isGap?' gap':'');
       cell.style.width=w+'px'; cell.style.height=h+'px';
       const img=document.createElement('img');
-      img.onerror=()=>{ cell.textContent='#'+i; cell.className='issue ph'; cell.style.width=w+'px'; cell.style.height=h+'px'; };
+      img.onerror=()=>{ cell.textContent='#'+i; cell.className='issue ph'+(isGap?' gap':''); cell.style.width=w+'px'; cell.style.height=h+'px'; };
       img.src=`covers/issues/${sid}/${i}.jpg`;
       const num=document.createElement('div'); num.className='num'; num.textContent='#'+i;
       cell.append(img,num); strip.appendChild(cell);
-    }
+    });
   }else{
-    cWrap.style.display='none';
+    cWrap.style.display='none'; if(legendEl) legendEl.style.display='';
   }
 
   // pod — hide section entirely when empty

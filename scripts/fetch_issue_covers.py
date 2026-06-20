@@ -22,6 +22,41 @@ import argparse, json, os, sys, time, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comic_cover_fetch import fetch_comic_synopsis, USER_AGENT
 
+# Legacy issue number -> (printed number, Comic Vine series name, volume start year).
+# Comic Vine indexes by the printed number within a SPECIFIC volume, not the legacy number,
+# so modern issues (legacy != printed, and in a different volume) need this conversion.
+LEGACY_MAPS = {
+    "asm": [
+        # (legacy_lo, legacy_hi, cv_series, start_year, offset)  ->  printed = legacy - offset
+        (1,   441, "Amazing Spider-Man", 1963, 0),     # vol 1  (#1-441)
+        (442, 499, "Amazing Spider-Man", 1999, 441),   # vol 2  #1-58
+        (500, 700, "Amazing Spider-Man", 1999, 0),     # vol 2  #500-700 (legacy == printed)
+        (770, 775, "Amazing Spider-Man", 2015, 751),   # vol 4  #19-24 (Clone Conspiracy)
+        (876, 894, "Amazing Spider-Man", 2018, 801),   # vol 5  #75-93 (Beyond)
+    ],
+}
+
+def map_legacy(series_id, n):
+    """legacy number -> (printed_number, cv_series, start_year), or None if unmapped."""
+    for lo, hi, cv, yr, off in LEGACY_MAPS.get(series_id, []):
+        if lo <= n <= hi:
+            return (n - off, cv, yr)
+    return None
+
+def cover_url_for(n, args):
+    """Resolve a cover URL for legacy issue n, via the legacy map if the series has one."""
+    if args.id in LEGACY_MAPS:
+        seg = map_legacy(args.id, n)
+        if not seg:
+            return ""                                   # outside known segments -> skip
+        printed, cv, yr = seg
+        _, url = fetch_comic_synopsis(series=cv, issue_num=str(printed), start_year=yr)
+        return url
+    _, url = fetch_comic_synopsis(series=args.series, issue_num=str(n))
+    if not url and args.alt_series:
+        _, url = fetch_comic_synopsis(series=args.alt_series, issue_num=str(n))
+    return url
+
 def _runs(missing):
     """Group a sorted list of ints into contiguous (start, end) runs."""
     runs, run = [], []
@@ -93,9 +128,7 @@ def main():
         path = os.path.join(out_dir, f"{n}.jpg")
         if os.path.exists(path) and not args.force:
             skip += 1; continue
-        _, url = fetch_comic_synopsis(series=args.series, issue_num=str(n))
-        if not url and args.alt_series:
-            _, url = fetch_comic_synopsis(series=args.alt_series, issue_num=str(n))
+        url = cover_url_for(n, args)
         if url:
             try:
                 req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})

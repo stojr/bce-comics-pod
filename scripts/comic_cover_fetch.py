@@ -198,6 +198,7 @@ def fetch_comic_synopsis(
     issue_title: str = "",
     api_key: str | None = None,
     edition: str = "",
+    start_year=None,
 ) -> tuple[str, str]:
     """
     Fetch (synopsis_text, cover_url) from Comic Vine. Either may be "" on failure.
@@ -267,7 +268,7 @@ def fetch_comic_synopsis(
         # ---- SINGLE ISSUE ----
         # Step 1: find the volume (cached per series name so a batch issue-fetch doesn't
         # re-search the volume for every issue — halves Comic Vine requests)
-        cache_key = series.strip().lower()
+        cache_key = (series.strip().lower(), str(start_year) if start_year else "")
         if cache_key in _VOL_CACHE:
             vol_id, vol_name = _VOL_CACHE[cache_key]
         else:
@@ -280,14 +281,17 @@ def fetch_comic_synopsis(
             if not volumes:
                 _log(f"no volume found for '{series}'", "warn")
                 return ("", "")
-            # best name overlap, then the volume with the MOST issues — so we get the main
-            # run, not a tiny same-named reprint/digital volume (e.g. a 2-issue 'ASM')
-            best_vol = max(volumes, key=lambda v: (_word_overlap(series, v.get("name", "")),
-                                                   v.get("count_of_issues") or 0))
+            # best name overlap, then the volume matching start_year (disambiguates the
+            # several same-named ASM volumes), then the one with the MOST issues (so we get
+            # the real run, not a tiny same-named reprint/digital volume)
+            def _vscore(v):
+                yr = 1 if (start_year and str(v.get("start_year")) == str(start_year)) else 0
+                return (_word_overlap(series, v.get("name", "")), yr, v.get("count_of_issues") or 0)
+            best_vol = max(volumes, key=_vscore)
             vol_id = best_vol.get("id")
             vol_name = best_vol.get("name", "?")
             _VOL_CACHE[cache_key] = (vol_id, vol_name)
-            _log(f"volume match: '{vol_name}' (id={vol_id})")
+            _log(f"volume match: '{vol_name}' (id={vol_id}, year={best_vol.get('start_year')})")
 
         # Step 2: fetch the exact issue
         issue_url = (

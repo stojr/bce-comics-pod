@@ -1,0 +1,51 @@
+{
+  "series": "Spectacular Spider-Man",
+  "run_max": 263,
+  "count": 2,
+  "books": [
+    {
+      "id": "9781302947408",
+      "order": 10,
+      "title": "Peter Parker, The Spectacular Spider-Man Omnibus Vol. 1",
+      "format": "Omnibus",
+      "format_raw": "Omni",
+      "on_spine": true,
+      "year": 2022,
+      "era_tag": "1-42",
+      "isbn": "9781302947408",
+      "pages": 928,
+      "read": false,
+      "status": "owned",
+      "cover": "covers/9781302947408.jpg",
+      "legacy_from": null,
+      "legacy_to": null,
+      "gaps_avail": [],
+      "also_in": "",
+      "pod": "",
+      "research": [],
+      "verified": false
+    },
+    {
+      "id": "9781302964467",
+      "order": 20,
+      "title": "Peter Parker, The Spectacular Spider-Man Omnibus Vol. 2",
+      "format": "Omnibus",
+      "format_raw": "Omni",
+      "on_spine": true,
+      "year": 2025,
+      "era_tag": "178",
+      "isbn": "9781302964467",
+      "pages": 1200,
+      "read": false,
+      "status": "owned",
+      "cover": "covers/9781302964467.jpg",
+      "legacy_from": null,
+      "legacy_to": null,
+      "gaps_avail": [],
+      "also_in": "",
+      "pod": "",
+      "research": [],
+      "verified": false
+    }
+  ]
+}

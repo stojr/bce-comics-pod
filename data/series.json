@@ -9,7 +9,7 @@
     "run_max": 1000,
     "theme": {
       "bg": "transparent",
-      "accent": "#272525"
+      "accent": "#fb0909"
     }
   },
   {
@@ -20,6 +20,26 @@
     "series_group": "Avengers: West Coast",
     "box": "Bookshelf",
     "run_max": 102,
+    "theme": {}
+  },
+  {
+    "id": "ssm",
+    "label": "Spectacular Spider-Man",
+    "file": "ssm.json",
+    "csv": "export_comics.csv",
+    "series_group": "Spider-Man: Spectacular",
+    "box": "Bookshelf",
+    "run_max": 263,
+    "theme": {}
+  },
+  {
+    "id": "ff",
+    "label": "Fantastic Four",
+    "file": "ff.json",
+    "csv": "export_comics.csv",
+    "series_group": "Fantastic Four",
+    "box": "Bookshelf",
+    "run_max": 700,
     "theme": {}
   }
 ]

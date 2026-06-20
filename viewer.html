@@ -52,6 +52,7 @@ body{display:flex;align-items:center;justify-content:center;}
 .badge.read{background:rgba(62,199,168,.16);color:var(--owned);}
 .badge.unread{background:rgba(107,114,128,.18);color:var(--ink-soft);}
 .badge.unverified{background:rgba(232,161,60,.16);color:var(--avail);}
+.badge.copies{background:rgba(127,119,221,.18);color:#b6aef0;border:1px solid rgba(127,119,221,.35);}
 .title{font-size:44px;font-weight:800;line-height:1.05;color:var(--ink);letter-spacing:-.01em;}
 .subtitle{font-size:21px;color:var(--ink-soft);margin-top:8px;font-weight:500;}
 .facts{display:flex;gap:44px;margin-top:24px;flex-wrap:wrap;}
@@ -169,6 +170,18 @@ function fitStage(){
 }
 window.addEventListener('resize', fitStage);
 
+// Collapse multiple physical copies of the same book into one slide (with a ×N badge),
+// so the walkthrough doesn't flip past the same edition twice. Keyed by title.
+function dedupeCopies(list){
+  const seen=new Map(), out=[];
+  list.forEach(b=>{
+    const k=(b.title||'').trim().toLowerCase();
+    if(k && seen.has(k)){ const r=seen.get(k); r.copies=(r.copies||1)+1; }
+    else { b.copies=1; if(k) seen.set(k,b); out.push(b); }
+  });
+  return out;
+}
+
 function paramIndex(){
   const p = new URLSearchParams(location.search);
   const i = parseInt(p.get('i'),10);
@@ -189,6 +202,7 @@ function render(){
   // badges
   let bd = `<span class="badge format">${b.format}</span>`;
   bd += b.read ? `<span class="badge read">✓ Read</span>` : `<span class="badge unread">Unread</span>`;
+  if(b.copies>1) bd += `<span class="badge copies">×${b.copies} copies</span>`;
   if(!b.verified && b.legacy_from!=null) bd += `<span class="badge unverified">range unverified</span>`;
   $('badges').innerHTML = bd;
 
@@ -380,7 +394,7 @@ async function boot(){
     const entry = manifest.find(e=>e.id===wantId) || manifest[0] || null;
     const file = entry ? 'data/'+entry.file : 'data/books.json';   // fallback: legacy single file
     const d = await (await fetch(file)).json();
-    DATA=d; books=d.books||[];
+    DATA=d; books=dedupeCopies(d.books||[]);
     currentEntry = entry;
     contentsMode = new URLSearchParams(location.search).get('contents')==='1';
     applyTheme(entry && entry.theme);

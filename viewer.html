@@ -287,13 +287,13 @@ function render(){
       s.style.width=Math.max(0.4,(pct(x.legacy_to,max)-pct(x.legacy_from,max)))+'%';
       ruler.appendChild(s);
     });
-    // available-but-unowned gaps across the run (amber) — e.g. a solicited volume you
-    // don't own yet. Drawn for every book so the rail's state is consistent slide to slide.
-    books.forEach(x=>(x.gaps_avail||[]).forEach(r=>{
+    // available-but-unowned gap for THIS book only (amber) — e.g. the next, solicited
+    // volume after it. Tied to its own page, not drawn on every slide.
+    (b.gaps_avail||[]).forEach(r=>{
       const s=document.createElement('div');s.className='seg avail';
       s.style.left=pct(r[0],max)+'%';s.style.width=Math.max(0.4,(pct(r[1],max)-pct(r[0],max)))+'%';
       ruler.appendChild(s);
-    }));
+    });
     // tick marks at #1 / #mid / #max
     [['#1',0],['#'+Math.round(max/2),50],['#'+max,100]].forEach(([t,p])=>{
       const mk=document.createElement('div');mk.className='tickmark';

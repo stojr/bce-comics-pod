@@ -57,6 +57,10 @@ DEFAULT_CV_API_KEY = "87866720d057b811d827d8f128943d76769001e4"
 
 CV_BASE = "https://comicvine.gamespot.com/api"
 
+# Per-series volume-id cache (series name -> (volume_id, volume_name)), populated during
+# a run so batch single-issue fetches don't re-search the volume every time.
+_VOL_CACHE = {}
+
 # Comic Vine BLOCKS requests with no/!generic User-Agent. A descriptive UA is REQUIRED.
 USER_AGENT = "ComicCoverFetch/1.0 (+https://example.com)"
 
@@ -261,20 +265,26 @@ def fetch_comic_synopsis(
             return ("", cover_url)
 
         # ---- SINGLE ISSUE ----
-        # Step 1: find the volume
-        vol_url = (
-            f"{CV_BASE}/search/?api_key={key}&format=json"
-            f"&query={urllib.parse.quote(series)}&resources=volume"
-            f"&field_list=id,name,publisher&limit=10"
-        )
-        volumes = _fetch_json(vol_url).get("results", [])
-        if not volumes:
-            _log(f"no volume found for '{series}'", "warn")
-            return ("", "")
-        best_vol = max(volumes, key=lambda v: _word_overlap(series, v.get("name", "")))
-        vol_id = best_vol.get("id")
-        vol_name = best_vol.get("name", "?")
-        _log(f"volume match: '{vol_name}' (id={vol_id})")
+        # Step 1: find the volume (cached per series name so a batch issue-fetch doesn't
+        # re-search the volume for every issue — halves Comic Vine requests)
+        cache_key = series.strip().lower()
+        if cache_key in _VOL_CACHE:
+            vol_id, vol_name = _VOL_CACHE[cache_key]
+        else:
+            vol_url = (
+                f"{CV_BASE}/search/?api_key={key}&format=json"
+                f"&query={urllib.parse.quote(series)}&resources=volume"
+                f"&field_list=id,name,publisher&limit=10"
+            )
+            volumes = _fetch_json(vol_url).get("results", [])
+            if not volumes:
+                _log(f"no volume found for '{series}'", "warn")
+                return ("", "")
+            best_vol = max(volumes, key=lambda v: _word_overlap(series, v.get("name", "")))
+            vol_id = best_vol.get("id")
+            vol_name = best_vol.get("name", "?")
+            _VOL_CACHE[cache_key] = (vol_id, vol_name)
+            _log(f"volume match: '{vol_name}' (id={vol_id})")
 
         # Step 2: fetch the exact issue
         issue_url = (

@@ -281,13 +281,13 @@
       "read": true,
       "status": "owned",
       "cover": "covers/9781302967789.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 224,
+      "legacy_to": 241,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9780785189169",
@@ -545,13 +545,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302950545.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 351,
+      "legacy_to": 360,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302948320",
@@ -567,13 +567,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302948320.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 368,
+      "legacy_to": 377,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302951047",
@@ -589,13 +589,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302951047.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 361,
+      "legacy_to": 367,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "75960635971400112",
@@ -633,13 +633,13 @@
       "read": true,
       "status": "owned",
       "cover": "covers/9781302921903.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 378,
+      "legacy_to": 380,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302930691",
@@ -655,8 +655,8 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302930691.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 381,
+      "legacy_to": 393,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
@@ -677,8 +677,8 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302953669.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 394,
+      "legacy_to": 396,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
@@ -699,18 +699,18 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302960087.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 397,
+      "legacy_to": 399,
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9780785157595",
       "order": 330,
-      "title": "(title needs lookup)",
+      "title": "The Next Chapter volume 1",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
       "on_spine": true,

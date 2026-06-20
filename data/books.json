@@ -468,7 +468,7 @@
     {
       "id": "75960635616499117",
       "order": 220,
-      "title": "Alien Costume Saga Book 2 (duplicate)",
+      "title": "Spider-Man: The Complete Alien Costume Saga Book 2",
       "format": "Trade Paperback",
       "format_raw": "Trade Paperback",
       "on_spine": true,
@@ -479,13 +479,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/75960635616499117.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 259,
+      "legacy_to": 263,
       "gaps_avail": [],
       "also_in": "",
-      "pod": "Duplicate CLZ entry - delete in the editor",
+      "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9780871357045",
@@ -864,7 +864,7 @@
     {
       "id": "9781302900632-2",
       "order": 400,
-      "title": "Brand New Day Vol. 2 (duplicate)",
+      "title": "Brand New Day: The Complete Collection Vol. 2",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
       "on_spine": true,
@@ -875,18 +875,18 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9781302900632.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 565,
+      "legacy_to": 577,
       "gaps_avail": [],
       "also_in": "",
-      "pod": "Duplicate CLZ entry of BND v2 - delete in the editor",
+      "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9780785195610-2",
       "order": 410,
-      "title": "Brand New Day Vol. 1 (duplicate)",
+      "title": "Brand New Day: The Complete Collection Vol. 1",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
       "on_spine": true,
@@ -897,13 +897,13 @@
       "read": false,
       "status": "owned",
       "cover": "covers/9780785195610.jpg",
-      "legacy_from": null,
-      "legacy_to": null,
+      "legacy_from": 546,
+      "legacy_to": 564,
       "gaps_avail": [],
       "also_in": "",
-      "pod": "Duplicate CLZ entry of BND v1 - delete in the editor",
+      "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "sins-past",
@@ -1084,7 +1084,7 @@
     {
       "id": "9781302925154",
       "order": 500,
-      "title": "Spider-Man: The Gauntlet Vol. 2 (new printing)",
+      "title": "Spider-Man: The Gauntlet - The Complete Collection Vol. 2",
       "format": "Complete Collection",
       "format_raw": "Thick Trade",
       "on_spine": true,
@@ -1099,9 +1099,9 @@
       "legacy_to": 637,
       "gaps_avail": [],
       "also_in": "",
-      "pod": "Appears to duplicate Gauntlet Vol. 2 (ord 470)",
+      "pod": "",
       "research": [],
-      "verified": false
+      "verified": true
     },
     {
       "id": "9781302965839",

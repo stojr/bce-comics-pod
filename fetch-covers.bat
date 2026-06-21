@@ -9,10 +9,13 @@ set "PY=python"
 where python >nul 2>nul || set "PY=py"
 
 echo Amazing Spider-Man...
-%PY% scripts\fetch_issue_covers.py --series "Amazing Spider-Man" --id asm --data data\books.json
+%PY% scripts\fetch_issue_covers.py --series "Amazing Spider-Man" --id asm --data data\books.json --delay 20
+echo.
+echo Fantastic Four...
+%PY% scripts\fetch_issue_covers.py --series "Fantastic Four" --id ff --data data\ff.json --delay 20
 echo.
 echo West Coast Avengers...
-%PY% scripts\fetch_issue_covers.py --series "West Coast Avengers" --id wca --data data\wca.json --alt-series "Avengers West Coast"
+%PY% scripts\fetch_issue_covers.py --series "West Coast Avengers" --id wca --data data\wca.json --alt-series "Avengers West Coast" --delay 20
 echo.
 echo Done. If lots said "no cover found", Comic Vine was rate-limited -
 echo wait an hour and double-click this again (it resumes where it left off).

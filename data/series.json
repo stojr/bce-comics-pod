@@ -39,7 +39,10 @@
     "csv": "export_comics.csv",
     "series_group": "Fantastic Four",
     "box": "Bookshelf",
-    "run_max": 700,
-    "theme": {}
+    "run_max": 750,
+    "theme": {
+      "bg": "transparent",
+      "accent": "#3659e2"
+    }
   }
 ]

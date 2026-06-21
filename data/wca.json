@@ -1,7 +1,7 @@
 {
   "series": "West Coast Avengers",
   "run_max": 102,
-  "count": 7,
+  "count": 8,
   "books": [
     {
       "id": "9781302914233",
@@ -23,7 +23,8 @@
       "also_in": "",
       "pod": "Team debut · also collects the 1984 4-issue limited series · Hawkeye & Mockingbird form the West Coast branch",
       "research": [],
-      "verified": true
+      "verified": true,
+      "kind": "book"
     },
     {
       "id": "9781302919719",
@@ -45,7 +46,8 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": true
+      "verified": true,
+      "kind": "book"
     },
     {
       "id": "9781302923167",
@@ -67,7 +69,8 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": true
+      "verified": true,
+      "kind": "book"
     },
     {
       "id": "9781302927424",
@@ -89,7 +92,8 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": true
+      "verified": true,
+      "kind": "book"
     },
     {
       "id": "9781302931988",
@@ -111,7 +115,8 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": true
+      "verified": true,
+      "kind": "book"
     },
     {
       "id": "9781302951016",
@@ -133,7 +138,8 @@
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": true
+      "verified": true,
+      "kind": "book"
     },
     {
       "id": "9781302956448",
@@ -151,16 +157,35 @@
       "cover": "covers/9781302956448.jpg",
       "legacy_from": 83,
       "legacy_to": 95,
-      "gaps_avail": [
-        [
-          96,
-          102
-        ]
-      ],
+      "gaps_avail": [],
       "also_in": "",
       "pod": "",
       "research": [],
-      "verified": true
+      "verified": true,
+      "kind": "book"
+    },
+    {
+      "id": "wca-gap-96",
+      "order": 75,
+      "kind": "gap",
+      "year": 2025,
+      "title": "Gap: Avengers West Coast Vol. 8 (#96-102, available)",
+      "format": "Gap",
+      "status": "gap",
+      "legacy_from": 96,
+      "legacy_to": 102,
+      "verified": false,
+      "format_raw": "Gap",
+      "on_spine": true,
+      "era_tag": "",
+      "isbn": "",
+      "pages": null,
+      "read": false,
+      "cover": "",
+      "gaps_avail": [],
+      "also_in": "",
+      "pod": "",
+      "research": []
     }
   ]
 }

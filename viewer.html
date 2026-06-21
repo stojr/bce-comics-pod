@@ -53,6 +53,7 @@ body{display:flex;align-items:center;justify-content:center;}
 .badge.unread{background:rgba(107,114,128,.18);color:var(--ink-soft);}
 .badge.unverified{background:rgba(232,161,60,.16);color:var(--avail);}
 .badge.copies{background:rgba(127,119,221,.18);color:#b6aef0;border:1px solid rgba(127,119,221,.35);}
+.badge.gap{background:rgba(232,161,60,.16);color:var(--avail);border:1px solid rgba(232,161,60,.45);}
 .title{font-size:44px;font-weight:800;line-height:1.05;color:var(--ink);letter-spacing:-.01em;}
 .subtitle{font-size:21px;color:var(--ink-soft);margin-top:8px;font-weight:500;}
 .facts{display:flex;gap:44px;margin-top:24px;flex-wrap:wrap;}
@@ -73,6 +74,9 @@ body{display:flex;align-items:center;justify-content:center;}
 .tick{position:absolute;top:60px;font-size:16px;font-weight:600;color:var(--ink-soft);font-family:"SF Mono",ui-monospace,monospace;}
 .here{position:absolute;top:-12px;font-size:15px;font-weight:800;letter-spacing:.1em;color:#fff;background:var(--hero);padding:3px 11px;border-radius:6px;transform:translateX(-50%);white-space:nowrap;text-transform:uppercase;box-shadow:0 3px 10px rgba(0,0,0,.45);}
 .here::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid var(--hero);}
+.seg.hero.gap{background:var(--avail);border-color:#ffd27a;box-shadow:0 0 0 4px rgba(232,161,60,.30),0 6px 16px rgba(232,161,60,.38);}
+.here.gap{background:var(--avail);color:#1a1205;}
+.here.gap::after{border-top-color:var(--avail);}
 .no-range{font-size:17px;color:var(--avail);font-style:italic;padding:18px 0;}
 .legend{display:flex;gap:28px;margin-top:30px;align-items:center;}
 .legend span{font-size:15px;color:var(--ink);display:flex;align-items:center;gap:9px;font-weight:500;}
@@ -211,6 +215,7 @@ function render(){
   if(!books.length) return;
   idx = (idx + books.length) % books.length;
   const b = books[idx];
+  const isGap = b.kind==='gap';
   const max = DATA.run_max || 1000;
 
   $('series').innerHTML = (DATA.series||'').toUpperCase() + ' <span class="legacy">· LEGACY</span>';
@@ -219,10 +224,15 @@ function render(){
   $('subtitle').textContent = [b.year, b.format].filter(Boolean).join('  ·  ');
 
   // badges
-  let bd = `<span class="badge format">${b.format}</span>`;
-  bd += b.read ? `<span class="badge read">✓ Read</span>` : `<span class="badge unread">Unread</span>`;
-  if(b.copies>1) bd += `<span class="badge copies">×${b.copies} copies</span>`;
-  if(!b.verified && b.legacy_from!=null) bd += `<span class="badge unverified">range unverified</span>`;
+  let bd;
+  if(isGap){
+    bd = `<span class="badge gap">Gap — available, not owned</span>`;
+  } else {
+    bd = `<span class="badge format">${b.format}</span>`;
+    bd += b.read ? `<span class="badge read">✓ Read</span>` : `<span class="badge unread">Unread</span>`;
+    if(b.copies>1) bd += `<span class="badge copies">×${b.copies} copies</span>`;
+    if(!b.verified && b.legacy_from!=null) bd += `<span class="badge unverified">range unverified</span>`;
+  }
   $('badges').innerHTML = bd;
 
   // issue range — hero display
@@ -242,9 +252,13 @@ function render(){
   const col = $('collects'); col.textContent='';
   if(b.legacy_from!=null && b.legacy_to!=null){
     const n = b.legacy_to - b.legacy_from + 1;
-    const f=document.createElement('b'); f.textContent=b.format;
     const c=document.createElement('b'); c.textContent=n;
-    col.append('This ', f, ' collects ', c, ' issue'+(n!==1?'s':'')+' in one book');
+    if(isGap){
+      col.append(c, ' issue'+(n!==1?'s':'')+' — available, not on the shelf');
+    } else {
+      const f=document.createElement('b'); f.textContent=b.format;
+      col.append('This ', f, ' collects ', c, ' issue'+(n!==1?'s':'')+' in one book');
+    }
     col.style.display='';
   } else { col.style.display='none'; }
 
@@ -267,6 +281,8 @@ function render(){
     img.onerror=()=>{ cw.innerHTML='<span class="ph">cover not<br>downloaded yet</span>'; };
     img.src=b.cover;                         // set via property — no attribute injection
     cw.appendChild(img);
+  }else if(isGap){
+    cw.innerHTML='<span class="ph">gap —<br>not owned</span>';
   }else{
     cw.innerHTML='<span class="ph">no ISBN<br>cover</span>';
   }
@@ -281,7 +297,7 @@ function render(){
     // OWNED coverage across the whole run — every book that has a range — so the rail
     // shows the shelf at a glance (green chunks toward #max), not just this one book.
     books.forEach(x=>{
-      if(x.legacy_from==null||x.legacy_to==null) return;
+      if(x.legacy_from==null||x.legacy_to==null||x.kind==='gap') return;
       const s=document.createElement('div');s.className='seg owned';
       s.style.left=pct(x.legacy_from,max)+'%';
       s.style.width=Math.max(0.4,(pct(x.legacy_to,max)-pct(x.legacy_from,max)))+'%';
@@ -304,13 +320,13 @@ function render(){
       ruler.appendChild(el);
     });
     // THIS BOOK — bold red marker on top of the owned coverage
-    const hero=document.createElement('div');hero.className='seg hero';
+    const hero=document.createElement('div');hero.className=isGap?'seg hero gap':'seg hero';
     hero.style.left=pct(b.legacy_from,max)+'%';
     hero.style.width=Math.max(2.4,(pct(b.legacy_to,max)-pct(b.legacy_from,max)))+'%';
     ruler.appendChild(hero);
-    const here=document.createElement('div');here.className='here';
+    const here=document.createElement('div');here.className=isGap?'here gap':'here';
     here.style.left=pct((b.legacy_from+b.legacy_to)/2,max)+'%';
-    here.textContent='THIS BOOK';ruler.appendChild(here);
+    here.textContent=isGap?'AVAILABLE':'THIS BOOK';ruler.appendChild(here);
     $('rulerSpan').textContent = `#${b.legacy_from} – #${b.legacy_to}`;
   }
 
@@ -320,8 +336,8 @@ function render(){
   if(contentsMode && b.legacy_from!=null && b.legacy_to!=null){
     cWrap.style.display=''; if(legendEl) legendEl.style.display='none';   // legend overlaps the wall
     const sid=(currentEntry&&currentEntry.id)||'';
-    const cells=[];                                       // [issue, isGap]
-    for(let i=b.legacy_from;i<=b.legacy_to;i++) cells.push([i,false]);
+    const cells=[];                                       // [issue, isGapCell]
+    for(let i=b.legacy_from;i<=b.legacy_to;i++) cells.push([i,isGap]);
     (b.gaps_avail||[]).forEach(g=>{ for(let i=g[0];i<=g[1];i++) cells.push([i,true]); });
     const n=cells.length;
     $('contentsSpan').textContent=`#${b.legacy_from} – #${b.legacy_to} · ${b.legacy_to-b.legacy_from+1} issues`;

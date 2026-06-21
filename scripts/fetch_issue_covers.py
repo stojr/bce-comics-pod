@@ -34,6 +34,17 @@ LEGACY_MAPS = {
         (770, 775, "Amazing Spider-Man", 2015, 751),   # vol 4  #19-24 (Clone Conspiracy)
         (876, 894, "Amazing Spider-Man", 2018, 801),   # vol 5  #75-93 (Beyond)
     ],
+    "ff": [
+        (1,   416, "Fantastic Four", 1961, 0),     # vol 1
+        (417, 428, "Fantastic Four", 1996, 416),   # vol 2 (Heroes Reborn) #1-12
+        (429, 498, "Fantastic Four", 1998, 428),   # vol 3 #1-70
+        (500, 588, "Fantastic Four", 1998, 0),     # vol 3 renumbered #500-588
+        (600, 611, "Fantastic Four", 1998, 0),     # FF #600-611 (legacy == printed)
+        (612, 627, "Fantastic Four", 2012, 611),   # Fraction era #1-16
+        (628, 645, "Fantastic Four", 2014, 627),   # Robinson #1-18
+        (646, 693, "Fantastic Four", 2018, 645),   # Slott #1-48
+        (694, 725, "Fantastic Four", 2022, 693),   # North #1-32
+    ],
 }
 
 def map_legacy(series_id, n):

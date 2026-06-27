@@ -157,7 +157,7 @@ body:hover .series-picker{opacity:.92;}
       <div class="k"><span class="mic">●</span> POD TALKING POINTS</div>
       <div class="points" id="pod">—</div>
     </div>
-    <div class="kbd-hint">← → flip &nbsp;·&nbsp; R read filter &nbsp;·&nbsp; S next unverified</div>
+    <div class="kbd-hint">← → flip &nbsp;·&nbsp; C covers &nbsp;·&nbsp; R read filter &nbsp;·&nbsp; S next unverified</div>
   </div>
 </div>
 
@@ -390,6 +390,7 @@ document.addEventListener('keydown',e=>{
     const n=books.findIndex((b,i)=>i>idx && !b.verified && b.legacy_from!=null);
     if(n>=0){idx=n;render();}
   }
+  else if(e.key.toLowerCase()==='c'){ contentsMode=!contentsMode; render(); }  // toggle issue covers
 });
 
 // Apply a per-series theme. The "screen background" is the page background behind the

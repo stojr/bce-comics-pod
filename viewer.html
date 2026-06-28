@@ -100,11 +100,20 @@ body{display:flex;align-items:center;justify-content:center;}
 .contents-head .label{font-size:15px;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase;font-weight:600;}
 .contents-head .span{font-size:18px;color:var(--hero);font-weight:800;font-family:"SF Mono",ui-monospace,monospace;}
 .contents-strip{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-.issue{position:relative;border-radius:4px;overflow:hidden;background:#0c0e13;border:1px solid var(--line);flex:0 0 auto;}
+.issue{position:relative;border-radius:4px;overflow:hidden;background:#0c0e13;border:1px solid var(--line);flex:0 0 auto;cursor:zoom-in;transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;}
 .issue img{width:100%;height:100%;object-fit:cover;display:block;}
 .issue .num{position:absolute;bottom:0;left:0;right:0;font-size:11px;text-align:center;color:var(--ink);background:rgba(8,10,14,.82);padding:2px 0;font-family:"SF Mono",ui-monospace,monospace;}
 .issue.ph{display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:12px;font-family:"SF Mono",ui-monospace,monospace;}
 .issue.gap{opacity:.62;border-color:var(--avail);box-shadow:inset 0 0 0 2px rgba(232,161,60,.55);}  /* available, not owned */
+/* hover any issue in the wall to pop it larger; click for a full-size lightbox */
+.issue:hover{transform:scale(1.6);z-index:40;box-shadow:0 14px 38px rgba(0,0,0,.7);border-color:var(--hero);}
+.issue.gap:hover{border-color:var(--avail);}
+.issue-lightbox{position:fixed;inset:0;background:rgba(6,8,12,.88);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:120;cursor:zoom-out;}
+.issue-lightbox.show{display:flex;}
+.issue-lightbox img{max-height:82vh;max-width:62vw;border-radius:10px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.7);}
+.issue-lightbox .ilb-ph{width:min(62vw,440px);height:78vh;max-height:660px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:20px;border:1px dashed var(--line);border-radius:10px;}
+.issue-lightbox .ilb-cap{color:var(--ink);font-size:22px;font-weight:700;font-family:"SF Mono",ui-monospace,monospace;letter-spacing:.04em;}
+.issue-lightbox .ilb-hint{position:absolute;bottom:26px;color:var(--ink-faint);font-size:13px;letter-spacing:.1em;}
 .kbd-hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--ink-faint);letter-spacing:.1em;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .2s;}
 body:hover .kbd-hint{opacity:.85;}   /* operator aid only — invisible on a static OBS capture */
 .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
@@ -159,6 +168,13 @@ body:hover .series-picker{opacity:.92;}
     </div>
     <div class="kbd-hint">← → flip &nbsp;·&nbsp; C covers &nbsp;·&nbsp; R read filter &nbsp;·&nbsp; S next unverified</div>
   </div>
+</div>
+
+<div class="issue-lightbox" id="issueLightbox">
+  <img id="issueLightboxImg" alt="">
+  <div class="ilb-ph" id="issueLightboxPh" style="display:none"></div>
+  <div class="ilb-cap" id="issueLightboxCap"></div>
+  <div class="ilb-hint">← → browse &nbsp;·&nbsp; click or Esc to close</div>
 </div>
 
 <script>
@@ -342,6 +358,7 @@ function render(){
     const n=cells.length;
     $('contentsSpan').textContent=`#${b.legacy_from} – #${b.legacy_to} · ${b.legacy_to-b.legacy_from+1} issues`;
     const strip=$('contentsStrip'); strip.innerHTML='';
+    lbCells=cells.slice(); lbSid=sid;                     // remember the wall for the click-to-enlarge lightbox
     // size covers to fill the width AND fit a height budget, so cover + timeline + wall
     // always stay inside the 1920x1080 OBS frame whatever the issue count
     const usable=1084, gap=10, wallBudget=330;
@@ -351,11 +368,13 @@ function render(){
     const maxW = Math.floor((wallBudget-(rows-1)*gap)/rows/1.5);
     const w = Math.max(58, Math.min(fillW, maxW));
     const h = Math.round(w*1.5);
-    cells.forEach(([i,isGap])=>{
+    cells.forEach(([i,isGap],pos)=>{
       const cell=document.createElement('div'); cell.className='issue'+(isGap?' gap':'');
       cell.style.width=w+'px'; cell.style.height=h+'px';
+      cell.title='click to enlarge';
+      cell.onclick=()=>openIssue(pos);
       const img=document.createElement('img');
-      img.onerror=()=>{ cell.textContent='#'+i; cell.className='issue ph'+(isGap?' gap':''); cell.style.width=w+'px'; cell.style.height=h+'px'; };
+      img.onerror=()=>{ cell.textContent='#'+i; cell.className='issue ph'+(isGap?' gap':''); cell.style.width=w+'px'; cell.style.height=h+'px'; cell.title='click to enlarge'; cell.onclick=()=>openIssue(pos); };
       img.src=`covers/issues/${sid}/${i}.jpg`;
       const num=document.createElement('div'); num.className='num'; num.textContent='#'+i;
       cell.append(img,num); strip.appendChild(cell);
@@ -379,7 +398,31 @@ function step(d){
   render();
 }
 
+// ---- issue-cover lightbox (click an issue in the deep-dive to read it full size) ----
+let lbCells=[], lbSid='', lbIndex=-1;
+function lbOpen(){ return $('issueLightbox').classList.contains('show'); }
+function openIssue(pos){
+  if(pos<0 || pos>=lbCells.length) return;
+  lbIndex=pos;
+  const [i,isGap]=lbCells[pos];
+  const img=$('issueLightboxImg'), ph=$('issueLightboxPh');
+  img.style.display=''; ph.style.display='none';
+  img.onerror=()=>{ img.style.display='none'; ph.style.display='flex'; ph.textContent='#'+i+' — cover not downloaded yet'; };
+  img.src=`covers/issues/${lbSid}/${i}.jpg`;
+  $('issueLightboxCap').textContent='#'+i+(isGap?'  ·  gap (available, not owned)':'');
+  $('issueLightbox').classList.add('show');
+}
+function closeIssue(){ $('issueLightbox').classList.remove('show'); lbIndex=-1; }
+function stepIssue(d){ if(lbIndex<0||!lbCells.length) return; openIssue((lbIndex+d+lbCells.length)%lbCells.length); }
+window.addEventListener('load',()=>{ const lb=$('issueLightbox'); if(lb) lb.addEventListener('click',closeIssue); });
+
 document.addEventListener('keydown',e=>{
+  if(lbOpen()){   // lightbox owns the keys while it's up: arrows browse issues, Esc/click close it
+    if(e.key==='Escape'){e.preventDefault();closeIssue();}
+    else if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();stepIssue(1);}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();stepIssue(-1);}
+    return;
+  }
   if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();step(1);}
   else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();step(-1);}
   else if(e.key.toLowerCase()==='r'){

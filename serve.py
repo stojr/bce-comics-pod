@@ -142,6 +142,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if route == "/save":    return self._do_save()
         if route == "/api/theme":   return self._do_theme()
         if route == "/api/rebuild": return self._do_rebuild()
+        if route == "/api/cover":   return self._do_cover()
         self.send_error(404)
 
     def _do_save(self):
@@ -210,6 +211,34 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         out = ((r.stdout or "") + (r.stderr or "")).strip()
         self._send_json(200 if r.returncode == 0 else 500,
                         {"ok": r.returncode == 0, "output": out})
+
+    def _do_cover(self):
+        """Save an image the editor picked into covers/<name>.<ext> (by convention name=ISBN),
+        so the user can attach a cover by file instead of typing a path. Browsers can't write
+        files, so the bytes are POSTed here. The image is only ever served back as a static
+        file, never executed; name/ext are validated and the path is confined to covers/."""
+        name = self._query("name", "") or ""
+        ext = (self._query("ext", "jpg") or "jpg").lower().lstrip(".")
+        if not re.match(r"^[A-Za-z0-9._-]+$", name) or ".." in name:
+            self.send_error(400, "bad cover name"); return
+        if ext not in ("jpg", "jpeg", "png", "webp", "gif"):
+            self.send_error(400, "unsupported image type"); return
+        raw = self._read_body(20 * 1024 * 1024)
+        if raw is None:
+            self.send_error(413, "image too large"); return
+        if len(raw) < 64:
+            self.send_error(400, "empty/too-small image"); return
+        covers_root = os.path.realpath(os.path.join(ROOT, "covers"))
+        os.makedirs(covers_root, exist_ok=True)
+        target = os.path.realpath(os.path.join(covers_root, f"{name}.{ext}"))
+        if os.path.commonpath([target, covers_root]) != covers_root:   # never escape covers/
+            self.send_error(400, "invalid path"); return
+        tmp = target + ".tmp"
+        with open(tmp, "wb") as f:
+            f.write(raw)
+        os.replace(tmp, target)
+        rel = os.path.relpath(target, ROOT).replace("\\", "/")
+        self._send_json(200, {"ok": True, "path": rel})
 
     def end_headers(self):
         # let the editor fetch/post without cache headaches

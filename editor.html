@@ -13,7 +13,7 @@
 body{background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;height:100vh;display:flex;overflow:hidden;}
 /* left: book list */
-.list{width:340px;flex:0 0 340px;background:var(--panel);border-right:1px solid var(--line);
+.list{width:440px;flex:0 0 440px;background:var(--panel);border-right:1px solid var(--line);
   display:flex;flex-direction:column;}
 .list .top{padding:16px 18px;border-bottom:1px solid var(--line);}
 .list h1{font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:600;}
@@ -31,12 +31,12 @@ select.series{margin-top:10px;width:100%;background:var(--bg);border:1px solid v
 .row:hover{background:var(--panel2);}
 .row.active{background:var(--panel2);border-left:3px solid var(--hero);padding-left:15px;}
 .row .n{font-size:12px;color:var(--faint);font-family:Consolas,monospace;width:24px;flex:0 0 24px;}
-.row .t{font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row .t{font-size:14px;flex:1;min-width:0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .row .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;}
 .row .dot.ok{background:var(--owned);} .row .dot.seed{background:var(--avail);} .row .dot.none{background:var(--faint);}
 /* right: editor */
 .edit{flex:1;overflow-y:auto;padding:28px 36px;}
-.edit .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.edit .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:20px;}
 .edit h2{font-size:24px;font-weight:700;}
 .edit .ro{font-size:12px;color:var(--faint);margin-top:4px;font-family:Consolas,monospace;}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;max-width:760px;}
@@ -52,8 +52,10 @@ textarea{resize:vertical;min-height:64px;line-height:1.5;}
 .row2 input{width:90px;}
 .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--soft);cursor:pointer;}
 .chk input{width:auto;}
-.cover-prev{width:120px;height:180px;border-radius:8px;background:var(--bg);border:1px solid var(--line);
-  display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--faint);font-size:12px;text-align:center;}
+.cover-prev{width:230px;height:345px;flex:0 0 230px;border-radius:8px;background:var(--bg);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--faint);font-size:13px;text-align:center;
+  cursor:pointer;transition:border-color .14s ease;}
+.cover-prev:hover{border-color:var(--hero);}
 .cover-prev img{width:100%;height:100%;object-fit:cover;}
 .actions{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:24px 0 8px;margin-top:28px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
 button{background:var(--hero);color:#fff;border:none;border-radius:8px;padding:11px 22px;font-size:15px;font-weight:600;cursor:pointer;}
@@ -111,11 +113,12 @@ button:hover{filter:brightness(1.08);}
       <h2 id="eTitle">Select a book</h2>
       <div class="ro" id="eMeta"></div>
     </div>
-    <div class="cover-prev" id="coverPrev">cover</div>
+    <div class="cover-prev" id="coverPrev" onclick="pickCover()" title="Click to choose or replace the cover image">cover</div>
   </div>
   <div class="grid" id="form" style="display:none">
     <div class="field"><label>Title</label><input id="fTitle"></div>
     <div class="field"><label>Format</label><input id="fFormat"></div>
+    <div class="field full"><label>ISBN <span class="hint">(barcode — also names the cover file)</span></label><input class="mono" id="fISBN" placeholder="9780785188346" style="max-width:300px"></div>
 
     <div class="field">
       <label>Legacy range (from → to)</label>
@@ -167,8 +170,12 @@ button:hover{filter:brightness(1.08);}
     </div>
 
     <div class="field full">
-      <label>Cover image path <span class="hint">(covers/&lt;isbn&gt;.jpg by default — or drop your own file in covers/ and point here)</span></label>
-      <input class="mono" id="fCover" placeholder="covers/9780785188346.jpg">
+      <label>Cover image <span class="hint">(click the cover box above or the button to pick a file — it's copied into covers/ for you)</span></label>
+      <div class="row2">
+        <input class="mono" id="fCover" placeholder="covers/9780785188346.jpg" style="flex:1;width:auto">
+        <button class="ghost" type="button" onclick="pickCover()">📁 Choose image…</button>
+      </div>
+      <input type="file" id="coverFile" accept="image/*" style="display:none">
     </div>
   </div>
 
@@ -250,6 +257,7 @@ function select(i){
   $('eMeta').textContent=[b.id,b.isbn,b.year,b.pages?b.pages+'p':''].filter(Boolean).join('  ·  ');
   $('fTitle').value=b.title||'';
   $('fFormat').value=b.format||'';
+  $('fISBN').value=b.isbn||'';
   $('fFrom').value=b.legacy_from??'';
   $('fTo').value=b.legacy_to??'';
   $('fVerified').checked=!!b.verified;
@@ -260,13 +268,7 @@ function select(i){
   renderGaps(b);
   renderResearch(b);
   $('researchOut').textContent='No lookup yet.'; $('researchAdd').style.display='none'; $('researchStatus').textContent=''; $('researchSources').innerHTML='';
-  // cover preview via DOM property (no innerHTML interpolation — SEC-6)
-  const cp=$('coverPrev'); cp.innerHTML='';
-  if(b.cover){
-    const img=document.createElement('img');
-    img.onerror=()=>{ cp.textContent='no cover file yet'; };
-    img.src=b.cover; cp.appendChild(img);
-  } else cp.textContent='no cover';
+  showCoverPreview(b.cover, false);
   renderList($('search').value.toLowerCase());
 }
 
@@ -298,6 +300,7 @@ function collect(){
   const b=DATA.books[cur];
   b.title=$('fTitle').value.trim();
   b.format=$('fFormat').value.trim();
+  b.isbn=$('fISBN').value.trim();
   const f=$('fFrom').value, t=$('fTo').value;
   b.legacy_from = f===''?null:parseInt(f,10);
   b.legacy_to   = t===''?null:parseInt(t,10);
@@ -356,6 +359,44 @@ function renumber(){ DATA.books.forEach((b,i)=>b.order=(i+1)*10); }  // gapped o
 function revert(){
   DATA.books[cur]=JSON.parse(JSON.stringify(dirtySnapshot));
   select(cur);
+}
+
+// ---- cover preview + image picker ----
+function showCoverPreview(path, bust){
+  const cp=$('coverPrev'); cp.innerHTML='';
+  if(path){
+    const img=document.createElement('img');
+    img.onerror=()=>{ cp.textContent='no cover file yet — click to pick one'; };
+    img.src = bust ? (path + (path.includes('?')?'&':'?') + 't=' + Date.now()) : path;  // cache-bust a just-replaced cover
+    cp.appendChild(img);
+  } else { cp.textContent='click to add cover'; }
+}
+function pickCover(){ if(cur<0){ alert('Select a book first.'); return; } $('coverFile').click(); }
+async function onCoverFile(e){
+  const file=e.target.files && e.target.files[0];
+  e.target.value='';                                   // reset so the same file can be re-picked
+  if(!file || cur<0) return;
+  const b=DATA.books[cur];
+  const name=((b.isbn||'').trim() || (b.id||'').trim());   // covers/<isbn>.jpg by convention; fall back to the stable id
+  if(!name){ alert('Give this book an ISBN first — the cover file is named after it.'); return; }
+  const okExt=['jpg','jpeg','png','webp','gif'];
+  const m=/\.([A-Za-z0-9]+)$/.exec(file.name||'');
+  let ext=(m?m[1]:'').toLowerCase();
+  if(!okExt.includes(ext)){
+    ext = file.type==='image/png'?'png':file.type==='image/webp'?'webp':file.type==='image/gif'?'gif':'jpg';
+  }
+  try{
+    const buf=await file.arrayBuffer();
+    if(buf.byteLength>20*1024*1024){ alert('That image is over 20 MB — please pick a smaller file.'); return; }
+    const q='?series='+encodeURIComponent((state.series&&state.series.id)||'')
+           +'&name='+encodeURIComponent(name)+'&ext='+encodeURIComponent(ext);
+    const r=await fetch('/api/cover'+q,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:buf});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok || !j.ok) throw new Error(j.error || ('HTTP '+r.status));
+    b.cover=j.path; $('fCover').value=j.path;
+    showCoverPreview(j.path, true);
+    markDirty();
+  }catch(err){ alert('Could not save the image — is serve.py running?\\n\\n'+err.message); }
 }
 
 // ---- web research ----
@@ -481,6 +522,8 @@ function populateSeriesSelect(){
 }
 
 $('search').addEventListener('input',e=>renderList(e.target.value.toLowerCase()));
+$('coverFile').addEventListener('change', onCoverFile);
+$('fCover').addEventListener('change', ()=>{ showCoverPreview($('fCover').value.trim(), false); markDirty(); });   // keep preview in sync if the path is typed/edited
 syncColor('bgColor','bgHex'); syncColor('accentColor','accentHex');
 wireEyedropper('bgEye','bgColor','bgHex'); wireEyedropper('accentEye','accentColor','accentHex');
 

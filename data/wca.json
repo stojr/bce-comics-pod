@@ -24,7 +24,14 @@
       "pod": "Team debut · also collects the 1984 4-issue limited series · Hawkeye & Mockingbird form the West Coast branch",
       "research": [],
       "verified": true,
-      "kind": "book"
+      "kind": "book",
+      "pod_coverage": {
+        "covered": true,
+        "aired": "2025-12",
+        "youtube": "https://www.youtube.com/watch?v=1Ncv3Swj4Rg&list=PLweLieYDlOCZ1jsoZE2LtsI2EZZ_PCYqA&index=153",
+        "rating_nick": 7.5,
+        "rating_stojr": 6
+      }
     },
     {
       "id": "9781302919719",

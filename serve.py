@@ -145,6 +145,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if route == "/api/cover":   return self._do_cover()
         if route == "/api/refetch-issue": return self._do_refetch_issue()
         if route == "/api/delete-issue":  return self._do_delete_issue()
+        if route == "/api/new-series":    return self._do_new_series()
         self.send_error(404)
 
     def _do_save(self):
@@ -195,6 +196,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         entry = self._series_entry(self._query("series"))
         if entry is None:
             self.send_error(400, "unknown series"); return
+        if not entry.get("csv") or not entry.get("series_group"):
+            # a hand-built series has no CLZ source — re-importing would overwrite it with nothing
+            self.send_error(400, "this series wasn't imported from CLZ — nothing to re-import"); return
         csv_name = entry.get("csv", "export_comics.csv")
         if not re.match(r"^[A-Za-z0-9._ -]+$", csv_name) or not re.match(r"^[A-Za-z0-9._-]+$", entry.get("file", "")):
             self.send_error(400, "bad csv/file name"); return
@@ -300,6 +304,65 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         os.replace(tmp, path)
         rel = os.path.relpath(path, ROOT).replace("\\", "/")
         self._send_json(200, {"ok": True, "path": rel, "bytes": len(data)})
+
+    def _do_new_series(self):
+        """Create a new series from the editor: either an empty shelf (add books by hand) or
+        a CLZ CSV import (runs build_books.py, which writes the data file + manifest entry)."""
+        raw = self._read_body(256 * 1024)
+        if raw is None:
+            self.send_error(413, "payload too large"); return
+        try:
+            p = json.loads(raw)
+        except Exception as e:
+            self.send_error(400, f"bad json: {e}"); return
+        sid = (p.get("id") or "").strip()
+        label = (p.get("label") or "").strip()
+        mode = (p.get("mode") or "empty").strip()
+        try:
+            run_max = int(p.get("run_max") or 1000)
+        except (TypeError, ValueError):
+            self.send_error(400, "bad run_max"); return
+        if not re.match(r"^[a-z0-9][a-z0-9_-]{0,38}$", sid):    # safe, permanent filename stem
+            self.send_error(400, "id must be lowercase letters/numbers/-/_ and start alphanumeric"); return
+        if not label:
+            self.send_error(400, "label required"); return
+        manifest, man_path = self._manifest()
+        if manifest is None:
+            manifest = []
+        if any(e.get("id") == sid for e in manifest):
+            self.send_error(409, f"series id '{sid}' already exists"); return
+        data_dir = os.path.join(ROOT, "data")
+        os.makedirs(data_dir, exist_ok=True)
+        out_path = os.path.join(data_dir, f"{sid}.json")
+
+        if mode == "clz":
+            csv_name = (p.get("csv") or "").strip()
+            group = (p.get("series_group") or "").strip()
+            box = (p.get("box") or "").strip()
+            if not re.match(r"^[A-Za-z0-9._ -]+$", csv_name) or not group or not box:
+                self.send_error(400, "csv/series_group/box required for a CLZ import"); return
+            if not os.path.exists(os.path.join(ROOT, csv_name)):
+                self.send_error(400, f"csv not found: {csv_name}"); return
+            cmd = [sys.executable, os.path.join(ROOT, "scripts", "build_books.py"),
+                   "--csv", os.path.join(ROOT, csv_name),
+                   "--series-group", group, "--box", box,
+                   "--series-label", label, "--run-max", str(run_max),
+                   "--series-id", sid, "--out", out_path]    # build_books upserts the manifest itself
+            try:
+                r = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT, timeout=120)
+            except Exception as e:
+                self._send_json(500, {"error": f"import failed: {e}"}); return
+            out = ((r.stdout or "") + (r.stderr or "")).strip()
+            if r.returncode != 0:
+                self._send_json(500, {"ok": False, "error": out or "build_books failed"}); return
+            self._send_json(200, {"ok": True, "id": sid, "output": out}); return
+
+        # empty series — write a stub data file and a minimal manifest entry
+        self._atomic_write_json(out_path, {"series": label, "run_max": run_max, "count": 0, "books": []})
+        manifest.append({"id": sid, "label": label, "file": f"{sid}.json", "run_max": run_max, "theme": {}})
+        self._backup(man_path)
+        self._atomic_write_json(man_path, manifest)
+        self._send_json(200, {"ok": True, "id": sid})
 
     def _do_delete_issue(self):
         """Delete ONE issue cover (the editor's 'remove' button for a wrong cover). Path is

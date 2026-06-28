@@ -89,6 +89,30 @@ button:hover{filter:brightness(1.08);}
 .color-row input[type=color]{width:46px;height:38px;padding:2px;background:var(--bg);border:1px solid var(--line);border-radius:8px;cursor:pointer;}
 .color-row input.hex{width:110px;}
 .modal .mactions{display:flex;gap:12px;justify-content:flex-end;margin-top:24px;}
+/* pod coverage fields */
+.pod-fields{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;}
+.pod-fields .pf{display:flex;flex-direction:column;gap:4px;}
+.pod-fields .pf>label{font-size:11px;}
+.pod-fields input{padding:8px 10px;font-size:14px;}
+.pod-combined{color:var(--avail);font-weight:700;}
+/* in-editor issue-cover strip */
+.issue-strip{display:flex;flex-wrap:wrap;gap:8px;max-height:360px;overflow-y:auto;padding:8px;
+  background:var(--bg);border:1px solid var(--line);border-radius:8px;}
+.istrip{position:relative;width:74px;height:111px;border-radius:4px;overflow:hidden;background:#0c0e13;border:1px solid var(--line);flex:0 0 auto;}
+.istrip img{width:100%;height:100%;object-fit:cover;display:block;}
+.istrip .n{position:absolute;top:0;left:0;right:0;font-size:10px;text-align:center;background:rgba(8,10,14,.82);color:var(--soft);font-family:Consolas,monospace;}
+.istrip.empty{display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:11px;font-family:Consolas,monospace;}
+.istrip .acts{position:absolute;bottom:0;left:0;right:0;display:flex;opacity:0;transition:opacity .12s;}
+.istrip:hover .acts{opacity:1;}
+.istrip .acts button{flex:1;border:none;background:rgba(8,10,14,.88);color:var(--ink);font-size:13px;padding:3px 0;cursor:pointer;line-height:1;}
+.istrip .acts button:hover{background:var(--hero);color:#fff;}
+.istrip .acts button.del:hover{background:#c0392b;color:#fff;}
+.istrip.busy{opacity:.45;pointer-events:none;}
+/* new-series modal rows */
+.ns-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.ns-row>label:first-child{flex:0 0 104px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);}
+.ns-row input{flex:1;min-width:0;}
+.ns-modes{display:flex;flex-direction:column;gap:6px;}
 </style>
 </head>
 <body>
@@ -98,7 +122,8 @@ button:hover{filter:brightness(1.08);}
     <select class="series" id="seriesSel" aria-label="Series"></select>
     <div class="sub" id="sub">loading…</div>
     <div class="toolbar">
-      <button onclick="addBook()">+ Add</button>
+      <button onclick="addBook()">+ Book</button>
+      <button onclick="openNewSeries()">+ Series</button>
       <button onclick="openSettings()">⚙ Colors</button>
       <button onclick="reimport()" id="reimportBtn">↻ Re-import</button>
     </div>
@@ -151,6 +176,18 @@ button:hover{filter:brightness(1.08);}
     </div>
 
     <div class="field full">
+      <label>BCE Pod coverage <span class="hint">(when covered, a badge + ratings show on the slide)</span></label>
+      <label class="chk"><input type="checkbox" id="fPodCovered"> Covered on the BCE Pod</label>
+      <div class="pod-fields" id="podFields" style="display:none">
+        <div class="pf"><label>Episode aired</label><input id="fPodAired" type="month" style="width:170px"></div>
+        <div class="pf"><label>Nick (0–10)</label><input id="fPodNick" type="number" min="0" max="10" step="0.1" style="width:110px"></div>
+        <div class="pf"><label>Stojr (0–10)</label><input id="fPodStojr" type="number" min="0" max="10" step="0.1" style="width:110px"></div>
+        <div class="pf"><label>Combined</label><input id="fPodCombined" class="pod-combined" readonly tabindex="-1" style="width:90px"></div>
+        <div class="pf" style="flex:1 1 100%"><label>YouTube link</label><input class="mono" id="fPodYoutube" placeholder="https://youtu.be/…"></div>
+      </div>
+    </div>
+
+    <div class="field full">
       <label>Web research <span class="hint">(looks up the volume/issues; saved notes appear below)</span></label>
       <div class="row2" style="margin-bottom:8px">
         <button class="ghost" type="button" onclick="research()">🔎 Research this volume</button>
@@ -176,6 +213,12 @@ button:hover{filter:brightness(1.08);}
         <button class="ghost" type="button" onclick="pickCover()">📁 Choose image…</button>
       </div>
       <input type="file" id="coverFile" accept="image/*" style="display:none">
+    </div>
+
+    <div class="field full" id="issueStripWrap" style="display:none">
+      <label>Issue covers <span class="hint">(the deep-dive wall — hover a cover: ↻ re-download · ✕ remove)</span></label>
+      <div class="issue-strip" id="issueStrip"></div>
+      <div class="hint" id="issueStripMsg" style="margin-top:6px"></div>
     </div>
   </div>
 
@@ -211,6 +254,32 @@ button:hover{filter:brightness(1.08);}
     <div class="mactions">
       <button class="ghost" onclick="closeSettings()">Cancel</button>
       <button onclick="saveTheme()">Save colors</button>
+    </div>
+  </div>
+</div>
+
+<!-- new series modal -->
+<div class="overlay" id="nsOverlay">
+  <div class="modal">
+    <h3>New series</h3>
+    <div class="msub">Adds a shelf to the viewer/editor. The ID is permanent (it names the data file).</div>
+    <div class="ns-row"><label>Series ID</label><input class="mono" id="nsId" placeholder="xmen"></div>
+    <div class="ns-row"><label>Display label</label><input id="nsLabel" placeholder="Uncanny X-Men"></div>
+    <div class="ns-row"><label>Ruler max #</label><input id="nsRunMax" type="number" value="1000" style="flex:0 0 120px"></div>
+    <div class="ns-row"><label>Source</label>
+      <div class="ns-modes">
+        <label class="chk"><input type="radio" name="nsMode" value="empty" checked> Empty — add books by hand</label>
+        <label class="chk"><input type="radio" name="nsMode" value="clz"> Import from a CLZ CSV export</label>
+      </div>
+    </div>
+    <div id="nsClz" style="display:none">
+      <div class="ns-row"><label>CSV file</label><input class="mono" id="nsCsv" placeholder="export_comics.csv"></div>
+      <div class="ns-row"><label>Series Group</label><input id="nsGroup" placeholder="X-Men: Uncanny"></div>
+      <div class="ns-row"><label>Storage Box</label><input id="nsBox" placeholder="Bookshelf"></div>
+    </div>
+    <div class="mactions">
+      <button class="ghost" onclick="closeNewSeries()">Cancel</button>
+      <button onclick="createSeries()" id="nsCreate">Create series</button>
     </div>
   </div>
 </div>
@@ -269,6 +338,15 @@ function select(i){
   renderResearch(b);
   $('researchOut').textContent='No lookup yet.'; $('researchAdd').style.display='none'; $('researchStatus').textContent=''; $('researchSources').innerHTML='';
   showCoverPreview(b.cover, false);
+  // pod coverage
+  const pcv=b.pod_coverage||{};
+  $('fPodCovered').checked=!!pcv.covered;
+  $('fPodAired').value=pcv.aired||'';
+  $('fPodNick').value=(pcv.rating_nick!=null)?pcv.rating_nick:'';
+  $('fPodStojr').value=(pcv.rating_stojr!=null)?pcv.rating_stojr:'';
+  $('fPodYoutube').value=pcv.youtube||'';
+  togglePodFields(); updatePodCombined();
+  renderIssueStrip(b);
   renderList($('search').value.toLowerCase());
 }
 
@@ -313,6 +391,13 @@ function collect(){
   b.pod=$('fPod').value.trim();
   b.also_in=$('fAlso').value.trim();
   b.cover=$('fCover').value.trim();
+  // pod coverage — keep an object only if there's something meaningful in it
+  const covered=$('fPodCovered').checked;
+  const nick=parseFloat($('fPodNick').value), stojr=parseFloat($('fPodStojr').value);
+  const pc={ covered:covered, aired:$('fPodAired').value||'', youtube:$('fPodYoutube').value.trim(),
+             rating_nick:isNaN(nick)?null:nick, rating_stojr:isNaN(stojr)?null:stojr };
+  if(covered||pc.aired||pc.youtube||pc.rating_nick!=null||pc.rating_stojr!=null) b.pod_coverage=pc;
+  else delete b.pod_coverage;
   markDirty();
 }
 
@@ -325,6 +410,87 @@ function addGap(){
   }
 }
 function removeGap(gi){ const b=DATA.books[cur]; b.gaps_avail.splice(gi,1); renderGaps(b); markDirty(); }
+
+// ---- pod coverage (#2a) ----
+function togglePodFields(){ $('podFields').style.display = $('fPodCovered').checked ? 'flex' : 'none'; }
+function updatePodCombined(){
+  const vals=[parseFloat($('fPodNick').value), parseFloat($('fPodStojr').value)].filter(v=>!isNaN(v));
+  $('fPodCombined').value = vals.length ? (vals.reduce((a,c)=>a+c,0)/vals.length).toFixed(1) : '';
+}
+
+// ---- in-editor issue-cover strip (#2b) ----
+function renderIssueStrip(b){
+  const wrap=$('issueStripWrap'), strip=$('issueStrip'), msg=$('issueStripMsg');
+  const sid=(state.series&&state.series.id)||'';
+  if(!sid || b.legacy_from==null || b.legacy_to==null){ wrap.style.display='none'; return; }
+  wrap.style.display=''; strip.innerHTML='';
+  const nums=[];
+  for(let i=b.legacy_from;i<=b.legacy_to;i++) nums.push(i);
+  (b.gaps_avail||[]).forEach(g=>{ for(let i=g[0];i<=g[1];i++) if(!nums.includes(i)) nums.push(i); });
+  const cap=300, shown=nums.slice(0,cap);
+  msg.textContent=`${nums.length} issue${nums.length!==1?'s':''} · covers/issues/${sid}/`+(nums.length>cap?` (showing first ${cap})`:'');
+  shown.forEach(n=>strip.appendChild(issueCell(sid,n)));
+}
+function issueCell(sid,n){
+  const cell=document.createElement('div'); cell.className='istrip';
+  const img=document.createElement('img');
+  const num=document.createElement('div'); num.className='n'; num.textContent='#'+n;
+  img.onerror=()=>{ cell.className='istrip empty'; cell.innerHTML=''; const t=document.createElement('span'); t.textContent='#'+n; cell.append(t, issueActs(sid,n,cell)); };
+  img.src=`covers/issues/${sid}/${n}.jpg?t=${Date.now()}`;     // cache-bust so a re-download shows at once
+  cell.append(img,num,issueActs(sid,n,cell));
+  return cell;
+}
+function issueActs(sid,n,cell){
+  const w=document.createElement('div'); w.className='acts';
+  const re=document.createElement('button'); re.type='button'; re.textContent='↻'; re.title='re-download from Comic Vine';
+  re.onclick=e=>{ e.stopPropagation(); issueAction('refetch-issue',sid,n,cell); };
+  const del=document.createElement('button'); del.type='button'; del.className='del'; del.textContent='✕'; del.title='remove this cover';
+  del.onclick=e=>{ e.stopPropagation(); issueAction('delete-issue',sid,n,cell); };
+  w.append(re,del); return w;
+}
+async function issueAction(kind,sid,n,cell){
+  cell.classList.add('busy');
+  try{
+    const r=await fetch(`/api/${kind}?series=${encodeURIComponent(sid)}&n=${n}`,{method:'POST'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok) throw new Error(j.error||('HTTP '+r.status));
+    cell.replaceWith(issueCell(sid,n));    // re-render the one cell from disk
+  }catch(e){ cell.classList.remove('busy'); alert((kind==='refetch-issue'?'Re-download':'Remove')+' failed for #'+n+':\\n\\n'+e.message); }
+}
+
+// ---- new series (#2c) ----
+function openNewSeries(){
+  $('nsId').value=''; $('nsLabel').value=''; $('nsRunMax').value='1000';
+  $('nsCsv').value=''; $('nsGroup').value=''; $('nsBox').value='';
+  document.querySelector('input[name=nsMode][value=empty]').checked=true;
+  $('nsClz').style.display='none';
+  $('nsOverlay').classList.add('show');
+}
+function closeNewSeries(){ $('nsOverlay').classList.remove('show'); }
+async function createSeries(){
+  const id=$('nsId').value.trim().toLowerCase();
+  const label=$('nsLabel').value.trim();
+  const run_max=parseInt($('nsRunMax').value,10)||1000;
+  const mode=document.querySelector('input[name=nsMode]:checked').value;
+  if(!/^[a-z0-9][a-z0-9_-]{0,38}$/.test(id)){ alert('ID must be lowercase letters/numbers/-/_ and start with a letter or number.'); return; }
+  if(!label){ alert('A display label is required.'); return; }
+  const body={ id, label, run_max, mode };
+  if(mode==='clz'){
+    body.csv=$('nsCsv').value.trim(); body.series_group=$('nsGroup').value.trim(); body.box=$('nsBox').value.trim();
+    if(!body.csv||!body.series_group||!body.box){ alert('CSV file, Series Group and Storage Box are all required for a CLZ import.'); return; }
+  }
+  const btn=$('nsCreate'); btn.textContent='…working'; btn.disabled=true;
+  try{
+    const r=await fetch('/api/new-series',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok) throw new Error(j.error||('HTTP '+r.status));
+    state.manifest=await (await fetch('data/series.json')).json();
+    populateSeriesSelect(); closeNewSeries();
+    await loadSeries(id); $('seriesSel').value=id; toast();
+    if(j.output) alert('Series created.\\n\\n'+j.output);
+  }catch(e){ alert('Could not create series:\\n\\n'+e.message); }
+  finally{ btn.textContent='Create series'; btn.disabled=false; }
+}
 
 // ---- add / remove / reorder ----
 function addBook(){
@@ -524,6 +690,12 @@ function populateSeriesSelect(){
 $('search').addEventListener('input',e=>renderList(e.target.value.toLowerCase()));
 $('coverFile').addEventListener('change', onCoverFile);
 $('fCover').addEventListener('change', ()=>{ showCoverPreview($('fCover').value.trim(), false); markDirty(); });   // keep preview in sync if the path is typed/edited
+['fPodNick','fPodStojr'].forEach(id=>$(id).addEventListener('input',()=>{ updatePodCombined(); markDirty(); }));
+['fPodAired','fPodYoutube'].forEach(id=>$(id).addEventListener('input',markDirty));
+$('fPodCovered').addEventListener('change',()=>{ togglePodFields(); markDirty(); });
+document.querySelectorAll('input[name=nsMode]').forEach(r=>r.addEventListener('change',()=>{
+  $('nsClz').style.display = document.querySelector('input[name=nsMode]:checked').value==='clz' ? '' : 'none';
+}));
 syncColor('bgColor','bgHex'); syncColor('accentColor','accentHex');
 wireEyedropper('bgEye','bgColor','bgHex'); wireEyedropper('accentEye','accentColor','accentHex');
 

@@ -199,6 +199,7 @@ def fetch_comic_synopsis(
     api_key: str | None = None,
     edition: str = "",
     start_year=None,
+    volume_id=None,
 ) -> tuple[str, str]:
     """
     Fetch (synopsis_text, cover_url) from Comic Vine. Either may be "" on failure.
@@ -266,32 +267,37 @@ def fetch_comic_synopsis(
             return ("", cover_url)
 
         # ---- SINGLE ISSUE ----
-        # Step 1: find the volume (cached per series name so a batch issue-fetch doesn't
-        # re-search the volume for every issue — halves Comic Vine requests)
-        cache_key = (series.strip().lower(), str(start_year) if start_year else "")
-        if cache_key in _VOL_CACHE:
-            vol_id, vol_name = _VOL_CACHE[cache_key]
+        # Step 1: resolve the volume. An explicit volume_id PINS it (no search) — this is how
+        # the legacy maps keep Comic Vine from picking the wrong same-named volume (e.g. FF
+        # Heroes Reborn 1996 vs FF vol 1 1961: the low-issue-count Heroes Reborn vol isn't even
+        # in the search's top results, so scoring would lose it to the big vol 1).
+        if volume_id:
+            vol_id, vol_name = volume_id, f"{series} (vol {volume_id})"
         else:
-            vol_url = (
-                f"{CV_BASE}/search/?api_key={key}&format=json"
-                f"&query={urllib.parse.quote(series)}&resources=volume"
-                f"&field_list=id,name,publisher,count_of_issues,start_year&limit=10"
-            )
-            volumes = _fetch_json(vol_url).get("results", [])
-            if not volumes:
-                _log(f"no volume found for '{series}'", "warn")
-                return ("", "")
-            # best name overlap, then the volume matching start_year (disambiguates the
-            # several same-named ASM volumes), then the one with the MOST issues (so we get
-            # the real run, not a tiny same-named reprint/digital volume)
-            def _vscore(v):
-                yr = 1 if (start_year and str(v.get("start_year")) == str(start_year)) else 0
-                return (_word_overlap(series, v.get("name", "")), yr, v.get("count_of_issues") or 0)
-            best_vol = max(volumes, key=_vscore)
-            vol_id = best_vol.get("id")
-            vol_name = best_vol.get("name", "?")
-            _VOL_CACHE[cache_key] = (vol_id, vol_name)
-            _log(f"volume match: '{vol_name}' (id={vol_id}, year={best_vol.get('start_year')})")
+            # cached per (series, start_year) so a batch issue-fetch doesn't re-search per issue
+            cache_key = (series.strip().lower(), str(start_year) if start_year else "")
+            if cache_key in _VOL_CACHE:
+                vol_id, vol_name = _VOL_CACHE[cache_key]
+            else:
+                vol_url = (
+                    f"{CV_BASE}/search/?api_key={key}&format=json"
+                    f"&query={urllib.parse.quote(series)}&resources=volume"
+                    f"&field_list=id,name,publisher,count_of_issues,start_year&limit=100"
+                )
+                volumes = _fetch_json(vol_url).get("results", [])
+                if not volumes:
+                    _log(f"no volume found for '{series}'", "warn")
+                    return ("", "")
+                # best name overlap, then start_year match (disambiguates same-named volumes),
+                # then most issues (the real run, not a tiny same-named reprint/digital volume)
+                def _vscore(v):
+                    yr = 1 if (start_year and str(v.get("start_year")) == str(start_year)) else 0
+                    return (_word_overlap(series, v.get("name", "")), yr, v.get("count_of_issues") or 0)
+                best_vol = max(volumes, key=_vscore)
+                vol_id = best_vol.get("id")
+                vol_name = best_vol.get("name", "?")
+                _VOL_CACHE[cache_key] = (vol_id, vol_name)
+                _log(f"volume match: '{vol_name}' (id={vol_id}, year={best_vol.get('start_year')})")
 
         # Step 2: fetch the exact issue
         issue_url = (

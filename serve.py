@@ -15,7 +15,7 @@ then open:
 
 Stop it with Ctrl+C in the terminal.
 """
-import json, os, re, sys, subprocess, http.server, socketserver, urllib.parse, shutil, datetime
+import json, os, re, sys, subprocess, http.server, socketserver, urllib.parse, urllib.request, shutil, datetime
 
 PORT = int(os.environ.get("PORT", "8000"))       # honors $PORT (preview/hosting); defaults to 8000
 DATA = os.path.join("data", "books.json")        # default save target (single-series / legacy)
@@ -143,6 +143,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if route == "/api/theme":   return self._do_theme()
         if route == "/api/rebuild": return self._do_rebuild()
         if route == "/api/cover":   return self._do_cover()
+        if route == "/api/refetch-issue": return self._do_refetch_issue()
+        if route == "/api/delete-issue":  return self._do_delete_issue()
         self.send_error(404)
 
     def _do_save(self):
@@ -239,6 +241,85 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         os.replace(tmp, target)
         rel = os.path.relpath(target, ROOT).replace("\\", "/")
         self._send_json(200, {"ok": True, "path": rel})
+
+    def _issue_n(self):
+        """Parse & bound the ?n=<legacy issue> param. Returns int or None."""
+        try:
+            n = int(self._query("n", ""))
+        except (TypeError, ValueError):
+            return None
+        return n if 1 <= n <= 100000 else None
+
+    def _do_refetch_issue(self):
+        """Re-download ONE issue cover for a book's deep-dive wall (backs the editor's
+        'redownload' button for a wrong/missing cover). Resolves via the same pinned-volume
+        logic the batch fetcher uses, then writes covers/issues/<series>/<n>.jpg."""
+        series = self._query("series")
+        if not re.match(r"^[A-Za-z0-9._-]+$", series or ""):
+            self.send_error(400, "bad series id"); return
+        entry = self._series_entry(series)
+        if entry is None:
+            self.send_error(400, "unknown series"); return
+        n = self._issue_n()
+        if n is None:
+            self.send_error(400, "bad issue number"); return
+        try:
+            scripts = os.path.join(ROOT, "scripts")
+            if scripts not in sys.path:
+                sys.path.insert(0, scripts)
+            import fetch_issue_covers as fic
+            from comic_cover_fetch import USER_AGENT
+        except Exception as e:
+            self._send_json(500, {"error": f"fetch module unavailable: {e}"}); return
+        # an args-like object for cover_url_for: mapped series (asm/ff) ignore .series and use
+        # the pinned LEGACY_MAPS volume; others fall back to the manifest's CV name/alt
+        class _A: pass
+        a = _A(); a.id = series
+        a.series = entry.get("cv_series") or entry.get("label") or series
+        a.alt_series = entry.get("cv_alt")
+        try:
+            url = fic.cover_url_for(n, a)
+        except Exception as e:
+            self._send_json(502, {"error": f"lookup failed: {e}"}); return
+        if not url:
+            self._send_json(404, {"error": f"no cover found for #{n}"}); return
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                data = r.read()
+        except Exception as e:
+            self._send_json(502, {"error": f"download failed: {e}"}); return
+        if len(data) < 1500:
+            self._send_json(502, {"error": "image too small / not found"}); return
+        out_dir = os.path.join(ROOT, "covers", "issues", series)
+        os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, f"{n}.jpg")
+        tmp = path + ".tmp"
+        with open(tmp, "wb") as fh:
+            fh.write(data)
+        os.replace(tmp, path)
+        rel = os.path.relpath(path, ROOT).replace("\\", "/")
+        self._send_json(200, {"ok": True, "path": rel, "bytes": len(data)})
+
+    def _do_delete_issue(self):
+        """Delete ONE issue cover (the editor's 'remove' button for a wrong cover). Path is
+        confined to covers/issues/ so a crafted series/n can't escape."""
+        series = self._query("series")
+        if not re.match(r"^[A-Za-z0-9._-]+$", series or ""):
+            self.send_error(400, "bad series id"); return
+        if self._series_entry(series) is None:
+            self.send_error(400, "unknown series"); return
+        n = self._issue_n()
+        if n is None:
+            self.send_error(400, "bad issue number"); return
+        issues_root = os.path.realpath(os.path.join(ROOT, "covers", "issues"))
+        target = os.path.realpath(os.path.join(issues_root, series, f"{n}.jpg"))
+        if os.path.commonpath([target, issues_root]) != issues_root:
+            self.send_error(400, "invalid path"); return
+        existed = os.path.exists(target)
+        if existed:
+            os.remove(target)
+        self._send_json(200, {"ok": True, "deleted": existed})
 
     def end_headers(self):
         # let the editor fetch/post without cache headaches

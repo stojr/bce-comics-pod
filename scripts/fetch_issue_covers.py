@@ -25,33 +25,35 @@ from comic_cover_fetch import fetch_comic_synopsis, USER_AGENT
 # Legacy issue number -> (printed number, Comic Vine series name, volume start year).
 # Comic Vine indexes by the printed number within a SPECIFIC volume, not the legacy number,
 # so modern issues (legacy != printed, and in a different volume) need this conversion.
+# (legacy_lo, legacy_hi, cv_series, start_year, offset, cv_volume_id)  ->  printed = legacy - offset
+# cv_volume_id PINS the Comic Vine volume so resolution can't drift to a same-named volume
+# (e.g. FF Heroes Reborn 1996 vs FF vol 1 1961). IDs verified against the Comic Vine API.
 LEGACY_MAPS = {
     "asm": [
-        # (legacy_lo, legacy_hi, cv_series, start_year, offset)  ->  printed = legacy - offset
-        (1,   441, "Amazing Spider-Man", 1963, 0),     # vol 1  (#1-441)
-        (442, 499, "Amazing Spider-Man", 1999, 441),   # vol 2  #1-58
-        (500, 700, "Amazing Spider-Man", 1999, 0),     # vol 2  #500-700 (legacy == printed)
-        (770, 775, "Amazing Spider-Man", 2015, 751),   # vol 4  #19-24 (Clone Conspiracy)
-        (876, 894, "Amazing Spider-Man", 2018, 801),   # vol 5  #75-93 (Beyond)
+        (1,   441, "Amazing Spider-Man", 1963, 0,   2127),    # vol 1 (1963)  #1-441
+        (442, 499, "Amazing Spider-Man", 1999, 441, 78701),   # vol 2 (1999)  #1-58
+        (500, 700, "Amazing Spider-Man", 1963, 0,   2127),    # vol 1 resumed legacy numbering #500-700
+        (770, 775, "Amazing Spider-Man", 2015, 751, 85076),   # vol 4 (2015)  #19-24 (Clone Conspiracy)
+        (876, 894, "Amazing Spider-Man", 2018, 801, 112161),  # vol 5 (2018)  #75-93 (Beyond)
     ],
     "ff": [
-        (1,   416, "Fantastic Four", 1961, 0),     # vol 1
-        (417, 428, "Fantastic Four", 1996, 416),   # vol 2 (Heroes Reborn) #1-12
-        (429, 498, "Fantastic Four", 1998, 428),   # vol 3 #1-70
-        (500, 588, "Fantastic Four", 1998, 0),     # vol 3 renumbered #500-588
-        (600, 611, "Fantastic Four", 1998, 0),     # FF #600-611 (legacy == printed)
-        (612, 627, "Fantastic Four", 2012, 611),   # Fraction era #1-16
-        (628, 645, "Fantastic Four", 2014, 627),   # Robinson #1-18
-        (646, 693, "Fantastic Four", 2018, 645),   # Slott #1-48
-        (694, 725, "Fantastic Four", 2022, 693),   # North #1-32
+        (1,   416, "Fantastic Four", 1961, 0,   2045),    # vol 1 (1961)
+        (417, 428, "Fantastic Four", 1996, 416, 9462),    # vol 2 Heroes Reborn (1996) #1-12
+        (429, 498, "Fantastic Four", 1998, 428, 6211),    # vol 3 (1998) #1-70
+        (500, 588, "Fantastic Four", 1998, 0,   6211),    # vol 3 resumed legacy numbering #500-588
+        (600, 611, "Fantastic Four", 1998, 0,   6211),    # vol 3 #600-611
+        (612, 627, "Fantastic Four", 2013, 611, 53921),   # Fraction (2013) #1-16
+        (628, 645, "Fantastic Four", 2014, 627, 71949),   # Robinson (2014) #1-18
+        (646, 693, "Fantastic Four", 2018, 645, 112685),  # Slott (2018) #1-48
+        (694, 725, "Fantastic Four", 2023, 693, 145912),  # North (2023) #1-32
     ],
 }
 
 def map_legacy(series_id, n):
-    """legacy number -> (printed_number, cv_series, start_year), or None if unmapped."""
-    for lo, hi, cv, yr, off in LEGACY_MAPS.get(series_id, []):
+    """legacy number -> (printed_number, cv_series, start_year, cv_volume_id), or None."""
+    for lo, hi, cv, yr, off, vol in LEGACY_MAPS.get(series_id, []):
         if lo <= n <= hi:
-            return (n - off, cv, yr)
+            return (n - off, cv, yr, vol)
     return None
 
 def cover_url_for(n, args):
@@ -60,8 +62,8 @@ def cover_url_for(n, args):
         seg = map_legacy(args.id, n)
         if not seg:
             return ""                                   # outside known segments -> skip
-        printed, cv, yr = seg
-        _, url = fetch_comic_synopsis(series=cv, issue_num=str(printed), start_year=yr)
+        printed, cv, yr, vol = seg
+        _, url = fetch_comic_synopsis(series=cv, issue_num=str(printed), start_year=yr, volume_id=vol)
         return url
     _, url = fetch_comic_synopsis(series=args.series, issue_num=str(n))
     if not url and args.alt_series:

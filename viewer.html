@@ -54,12 +54,25 @@ body{display:flex;align-items:center;justify-content:center;}
 .badge.unverified{background:rgba(232,161,60,.16);color:var(--avail);}
 .badge.copies{background:rgba(127,119,221,.18);color:#b6aef0;border:1px solid rgba(127,119,221,.35);}
 .badge.gap{background:rgba(232,161,60,.16);color:var(--avail);border:1px solid rgba(232,161,60,.45);}
+.badge.pod{background:rgba(226,54,54,.18);color:#ff8a8a;border:1px solid rgba(226,54,54,.5);}
 .title{font-size:44px;font-weight:800;line-height:1.05;color:var(--ink);letter-spacing:-.01em;}
 .subtitle{font-size:21px;color:var(--ink-soft);margin-top:8px;font-weight:500;}
 .facts{display:flex;gap:44px;margin-top:24px;flex-wrap:wrap;}
 .fact .k{font-size:13px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:5px;}
 .fact .v{font-size:20px;color:var(--ink);font-weight:600;}
 .fact .v.mono{font-family:"SF Mono",ui-monospace,monospace;letter-spacing:-.02em;}
+/* "On the BCE Pod" coverage panel — only renders when a book was covered on the show */
+.pod-cover{margin-top:22px;display:flex;align-items:center;gap:20px;padding:13px 18px;border-radius:10px;max-width:600px;
+  background:linear-gradient(90deg,rgba(226,54,54,.12),rgba(226,54,54,.02));border:1px solid rgba(226,54,54,.32);}
+.pod-cover .pc-rating{font-size:34px;font-weight:800;color:var(--ink);font-family:"SF Mono",ui-monospace,monospace;line-height:1;flex:0 0 auto;}
+.pod-cover .pc-rating small{font-size:14px;color:var(--ink-faint);font-weight:600;letter-spacing:.06em;}
+.pod-cover .pc-detail{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.pod-cover .pc-label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#ff8a8a;font-weight:700;}
+.pod-cover .pc-aired{font-size:17px;color:var(--ink);font-weight:600;}
+.pod-cover .pc-breakdown{font-size:14px;color:var(--ink-soft);}
+.pod-cover .pc-watch{margin-left:auto;font-size:15px;font-weight:700;color:#fff;background:var(--hero);
+  padding:9px 18px;border-radius:8px;text-decoration:none;white-space:nowrap;flex:0 0 auto;}
+.pod-cover .pc-watch:hover{filter:brightness(1.08);}
 .ruler-wrap{padding:26px 48px 10px;}
 .ruler-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px;}
 .ruler-head .label{font-size:15px;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase;font-weight:600;}
@@ -143,6 +156,7 @@ body:hover .series-picker{opacity:.92;}
         <div id="issue-range" class="issue-range"></div>
         <div id="collects" class="collects"></div>
         <div class="facts" id="facts"></div>
+        <div id="podCover" class="pod-cover" style="display:none"></div>
       </div>
     </div>
     <div class="ruler-wrap">
@@ -166,7 +180,7 @@ body:hover .series-picker{opacity:.92;}
       <div class="k"><span class="mic">●</span> POD TALKING POINTS</div>
       <div class="points" id="pod">—</div>
     </div>
-    <div class="kbd-hint">← → flip &nbsp;·&nbsp; C covers &nbsp;·&nbsp; R read filter &nbsp;·&nbsp; S next unverified</div>
+    <div class="kbd-hint">← → flip &nbsp;·&nbsp; C hide covers &nbsp;·&nbsp; R read filter &nbsp;·&nbsp; S next unverified</div>
   </div>
 </div>
 
@@ -188,6 +202,20 @@ function fitStage(){
   const s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
   const st = document.querySelector('.stage');
   if(st) st.style.transform = 'scale('+s+')';
+  fitCard();
+}
+// With covers shown by default (+ the optional pod panel + talking points), a packed card
+// can exceed the 1080 frame and clip in OBS. Scale the card down just enough to fit; stays
+// full size (scale 1) when it already fits. The card is centred, so the budget is the full
+// 1080, not the padded area.
+function fitCard(){
+  const card = document.querySelector('.card');
+  if(!card) return;
+  card.style.transform='none';                       // reset to measure natural layout height
+  const avail = 1072, h = card.offsetHeight;
+  const s = h>avail ? avail/h : 1;
+  card.style.transformOrigin='center center';
+  card.style.transform = s<1 ? 'scale('+s+')' : 'none';
 }
 window.addEventListener('resize', fitStage);
 
@@ -227,6 +255,14 @@ function paramIndex(){
   return Number.isFinite(i) ? i-1 : null;  // ?i=1 == first book
 }
 
+// "2025-03" -> "March 2025"; passes anything else through unchanged
+function fmtAired(s){
+  const m=/^(\d{4})-(\d{1,2})$/.exec(s||'');
+  if(!m) return s||'';
+  const months=['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  return (months[parseInt(m[2],10)]||'')+' '+m[1];
+}
+
 function render(){
   if(!books.length) return;
   idx = (idx + books.length) % books.length;
@@ -237,7 +273,7 @@ function render(){
   $('series').innerHTML = (DATA.series||'').toUpperCase() + ' <span class="legacy">· LEGACY</span>';
   $('counter').textContent = `${idx+1}/${books.length}`;
   $('title').textContent = b.title;
-  $('subtitle').textContent = [b.year, b.format].filter(Boolean).join('  ·  ');
+  $('subtitle').textContent = b.format || '';   // year dropped — it's the book's print year, not meaningful to viewers
 
   // badges
   let bd;
@@ -247,6 +283,7 @@ function render(){
     bd = `<span class="badge format">${b.format}</span>`;
     bd += b.read ? `<span class="badge read">✓ Read</span>` : `<span class="badge unread">Unread</span>`;
     if(b.copies>1) bd += `<span class="badge copies">×${b.copies} copies</span>`;
+    if(b.pod_coverage && b.pod_coverage.covered) bd += `<span class="badge pod">▶ On the Pod</span>`;
     if(!b.verified && b.legacy_from!=null) bd += `<span class="badge unverified">range unverified</span>`;
   }
   $('badges').innerHTML = bd;
@@ -289,6 +326,31 @@ function render(){
   }
   if(b.also_in) facts += `<div class="fact"><div class="k">Also in</div><div class="v" style="color:var(--avail)">${b.also_in}</div></div>`;
   $('facts').innerHTML = facts;
+
+  // "On the BCE Pod" — only when this edition was covered on the show (built via DOM; the
+  // YouTube URL is set as a property and scheme-checked, never interpolated into HTML)
+  const pc = $('podCover'); pc.innerHTML='';
+  const cov = (!isGap && b.pod_coverage && b.pod_coverage.covered) ? b.pod_coverage : null;
+  if(cov){
+    pc.style.display='';
+    const nums=[cov.rating_nick, cov.rating_stojr].filter(v=>typeof v==='number' && !isNaN(v));
+    if(nums.length){
+      const combined=nums.reduce((a,c)=>a+c,0)/nums.length;
+      const r=document.createElement('div'); r.className='pc-rating';
+      r.textContent='★ '+combined.toFixed(1); const s=document.createElement('small'); s.textContent=' /10';
+      r.appendChild(s); pc.appendChild(r);
+    }
+    const detail=document.createElement('div'); detail.className='pc-detail';
+    const lbl=document.createElement('div'); lbl.className='pc-label'; lbl.textContent='On the BCE Pod'; detail.appendChild(lbl);
+    if(cov.aired){ const a=document.createElement('div'); a.className='pc-aired'; a.textContent='Aired '+fmtAired(cov.aired); detail.appendChild(a); }
+    if(nums.length===2){ const bk=document.createElement('div'); bk.className='pc-breakdown';
+      bk.textContent='Nick '+cov.rating_nick.toFixed(1)+'  ·  Stojr '+cov.rating_stojr.toFixed(1); detail.appendChild(bk); }
+    pc.appendChild(detail);
+    if(cov.youtube && /^https?:\/\//i.test(cov.youtube)){
+      const w=document.createElement('a'); w.className='pc-watch'; w.target='_blank'; w.rel='noopener';
+      w.href=cov.youtube; w.textContent='▶ Watch'; pc.appendChild(w);
+    }
+  } else { pc.style.display='none'; }
 
   // cover — DOM-based with a null-safe onerror (closure over the well, not this.parentNode)
   const cw = $('cover'); cw.innerHTML='';
@@ -387,6 +449,8 @@ function render(){
   const podSection = $('pod-section');
   if(b.pod){ podSection.style.display=''; $('pod').className='points'; $('pod').innerHTML=b.pod; }
   else{ podSection.style.display='none'; }
+
+  fitCard();   // keep the (now taller) card inside the 1080 frame
 }
 
 function step(d){
@@ -478,7 +542,7 @@ async function boot(){
     const d = await (await fetch(file)).json();
     DATA=d; books=dedupeCopies(d.books||[]);
     currentEntry = entry;
-    contentsMode = new URLSearchParams(location.search).get('contents')==='1';
+    contentsMode = new URLSearchParams(location.search).get('contents')!=='0';   // covers shown by default; C (or ?contents=0) hides them
     applyTheme(entry && entry.theme);
     populatePicker(manifest, entry ? entry.id : null);
     const pi=paramIndex();

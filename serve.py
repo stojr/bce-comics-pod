@@ -17,7 +17,7 @@ Stop it with Ctrl+C in the terminal.
 """
 import json, os, re, sys, subprocess, http.server, socketserver, urllib.parse, shutil, datetime
 
-PORT = 8000
+PORT = int(os.environ.get("PORT", "8000"))       # honors $PORT (preview/hosting); defaults to 8000
 DATA = os.path.join("data", "books.json")        # default save target (single-series / legacy)
 ROOT = os.path.dirname(os.path.abspath(__file__))
 

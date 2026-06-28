@@ -1,4 +1,10 @@
-covers/
+# secrets — never commit (this repo is public)
+secrets.local.json
+
+# local-only working files
 data/backups/
 __pycache__/
 .DS_Store
+*.tmp
+
+# NOTE: covers/ ARE committed so the public GitHub Pages viewer can show them.

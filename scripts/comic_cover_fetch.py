@@ -32,8 +32,9 @@ QUICK START
 API KEY
 -------
 Comic Vine requires a free API key (https://comicvine.gamespot.com/api/).
-A working key is hardcoded below as the default. To use your own, pass
-api_key=... to any function, or set the COMIC_VINE_API_KEY env var.
+Key resolution order: api_key=... arg > COMIC_VINE_API_KEY env var >
+secrets.local.json (gitignored — NOT in the public repo). Copy
+secrets.local.example.json to secrets.local.json and put your key there.
 
 Comic Vine rate limit: ~200 requests/resource per hour. Cache aggressively;
 this module's local-match step (find_local_cover) avoids repeat downloads.
@@ -51,9 +52,6 @@ from pathlib import Path
 # --------------------------------------------------------------------------
 # Configuration
 # --------------------------------------------------------------------------
-
-# Default Comic Vine API key. Override per-call or via env var COMIC_VINE_API_KEY.
-DEFAULT_CV_API_KEY = "87866720d057b811d827d8f128943d76769001e4"
 
 CV_BASE = "https://comicvine.gamespot.com/api"
 
@@ -75,8 +73,22 @@ def _log(msg: str, level: str = "info") -> None:
     print(f"[cover:{level}] {msg}")
 
 
+def _key_from_secrets() -> str:
+    """Read the Comic Vine key from a gitignored secrets.local.json (project root or scripts/),
+    so no key is committed to the public repo."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    for path in (os.path.join(os.path.dirname(here), "secrets.local.json"),
+                 os.path.join(here, "secrets.local.json")):
+        try:
+            with open(path, encoding="utf-8") as f:
+                return (json.load(f).get("comic_vine_api_key") or "").strip()
+        except Exception:
+            continue
+    return ""
+
+
 def _resolve_key(api_key: str | None) -> str:
-    return (api_key or os.environ.get("COMIC_VINE_API_KEY") or DEFAULT_CV_API_KEY).strip()
+    return (api_key or os.environ.get("COMIC_VINE_API_KEY") or _key_from_secrets()).strip()
 
 
 # --------------------------------------------------------------------------

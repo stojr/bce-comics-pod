@@ -116,7 +116,14 @@
       "gaps_avail": [],
       "also_in": "",
       "pod": "",
-      "research": []
+      "research": [],
+      "pod_coverage": {
+        "covered": true,
+        "aired": "2025-11",
+        "youtube": "https://www.youtube.com/watch?v=zqs7DNyMXOw",
+        "rating_nick": 8,
+        "rating_stojr": 9
+      }
     },
     {
       "id": "ff-60",

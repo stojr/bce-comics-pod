@@ -166,6 +166,20 @@ def extract_issue_key(filename: str) -> str | None:
     return key or None
 
 
+def _contains_key(short: str, long: str) -> bool:
+    """True if `short` occurs in `long` without splitting a number at either edge.
+    Plain `in` would let 'excalibur1' match 'excalibur10' (wrong issue's cover)."""
+    i = long.find(short)
+    while i != -1:
+        j = i + len(short)
+        cut_before = short[0].isdigit() and i > 0 and long[i - 1].isdigit()
+        cut_after = short[-1].isdigit() and j < len(long) and long[j].isdigit()
+        if not (cut_before or cut_after):
+            return True
+        i = long.find(short, i + 1)
+    return False
+
+
 def find_local_cover(series: str, issue_num: str, covers_dir: str | Path) -> str | None:
     """
     Look in covers_dir for an already-downloaded cover matching series+issue.
@@ -186,15 +200,16 @@ def find_local_cover(series: str, issue_num: str, covers_dir: str | Path) -> str
         if extract_issue_key(c.name) == want:
             return str(c)
 
-    # Containment fallback (handles annual/bonus naming), prefer longest overlap
+    # Containment fallback (handles annual/bonus naming), prefer longest overlap.
+    # Issue numbers must match whole: 'excalibur1' never matches 'excalibur10'.
     best, best_len = None, 0
     for c in covers:
         ck = extract_issue_key(c.name)
         if not ck:
             continue
-        if ck in want and len(ck) > best_len:
+        if _contains_key(ck, want) and len(ck) > best_len:
             best, best_len = str(c), len(ck)
-        elif want in ck and len(want) > best_len:
+        elif _contains_key(want, ck) and len(want) > best_len:
             best, best_len = str(c), len(want)
     return best
 
@@ -443,4 +458,9 @@ if __name__ == "__main__":
         assert extract_issue_key("Uncanny X-Men-202.png") == "uncannyxmen202"
         assert extract_issue_key("Avengers 289") == "avengers289"
         assert extract_issue_key("Amazing-Spider-Man-394.jpg") == "amazingspiderman394"
+        # Issue numbers match whole in the containment fallback (Excalibur #1 got #10's cover).
+        assert not _contains_key("excalibur1", "excalibur10")
+        assert not _contains_key("uncannyxmen2", "uncannyxmen202")
+        assert _contains_key("uncannyxmen202", "theuncannyxmen202")
+        assert _contains_key("excalibur1", "excalibur1variant")
         print("Self-test OK. Usage: python comic_cover_fetch.py \"<series>\" <issue> [covers_dir]")
